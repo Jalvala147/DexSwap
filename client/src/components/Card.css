@@ -1,0 +1,300 @@
+.card {
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 30px var(--gold-glow);
+}
+
+.card.sold {
+  opacity: 0.5;
+}
+
+.card-image {
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+  background: rgba(26, 26, 31, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 16px 16px 0 0;
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card-image.no-image {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(26, 26, 31, 0.8) 0%, rgba(15, 15, 20, 0.9) 100%);
+}
+
+.no-image-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.no-image-text {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.card:hover .card-image img {
+  transform: scale(1.05);
+}
+
+.card-content {
+  padding: 24px;
+}
+
+.card-content h3 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.card-badges {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: white;
+  display: inline-block;
+}
+
+.rarity-badge {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.condition-badge {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.card-description {
+  color: var(--text-secondary) !important;
+  margin-bottom: 20px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.card-info {
+  margin-bottom: 20px;
+  padding: 16px;
+  position: relative;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(26, 26, 31, 0.4);
+  border: 1px solid var(--gold-border);
+}
+
+.price-section, .bid-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.price-label, .bid-label {
+  color: var(--text-secondary) !important;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.price {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--gold) !important;
+  text-shadow: 0 0 20px var(--gold-glow);
+  letter-spacing: -0.02em;
+}
+
+.bid-amount {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--neon-water) !important;
+  text-shadow: 0 0 15px var(--neon-water);
+}
+
+.seller-info {
+  color: var(--text-tertiary) !important;
+  font-size: 13px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--gold-border);
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.input-group {
+  width: 100%;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.buy-button {
+  flex: 1;
+  padding: 14px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.buy-button::before {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.6);
+}
+
+.buy-button:hover::before {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: rgba(16, 185, 129, 0.8);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+.bid-button {
+  flex: 1;
+  padding: 14px;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.bid-button::before {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.bid-button:hover::before {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 20px var(--blue-glow);
+}
+
+.sold-badge {
+  text-align: center;
+  padding: 16px;
+  position: relative;
+  border-radius: 12px;
+  margin-top: 16px;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+}
+
+.sold-badge span {
+  position: relative;
+  z-index: 1;
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Owner badge */
+.card.owned {
+  border: 2px solid var(--gold);
+}
+
+.owner-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--amber-start) 100%);
+  color: #000;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 20px;
+  z-index: 10;
+  box-shadow: 0 4px 12px var(--gold-glow);
+}
+
+/* Owner actions */
+.owner-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-button {
+  width: 100%;
+  padding: 14px;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59, 130, 246, 0.6);
+  color: #60a5fa;
+}
+
+.edit-button:hover {
+  background: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+.toggle-availability {
+  width: 100%;
+  padding: 14px;
+  font-weight: 600;
+  font-size: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-availability.available {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #f87171;
+}
+
+.toggle-availability.available:hover {
+  background: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+}
+
+.toggle-availability.unavailable {
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.6);
+  color: #4ade80;
+}
+
+.toggle-availability.unavailable:hover {
+  background: rgba(34, 197, 94, 0.3);
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
+}

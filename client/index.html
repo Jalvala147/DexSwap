@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- Google tag (gtag.js) — flujo GA4: 14389018467; ID de medición: G-R9E098SWYR -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R9E098SWYR"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-R9E098SWYR');
+    </script>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DEXswap — Mercado de cartas Pokémon TCG | Compra, vende e intercambia</title>
+    <meta
+      name="description"
+      content="DEXswap: mercado online de cartas Pokémon TCG. Compra, vende e intercambia cartas coleccionables, rarezas, sobres y cartas holográficas. Marketplace seguro para coleccionistas y jugadores."
+    />
+    <meta
+      name="keywords"
+      content="cartas Pokémon, Pokémon TCG, mercado cartas Pokémon, comprar cartas Pokémon, vender cartas Pokémon, intercambio cartas, cartas coleccionables, rarezas Pokémon, DEXswap, marketplace TCG, trading cards"
+    />
+    <meta name="author" content="DEXswap" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DEXswap" />
+    <meta property="og:title" content="DEXswap — Mercado de cartas Pokémon TCG" />
+    <meta
+      property="og:description"
+      content="Compra, vende e intercambia cartas Pokémon. Coleccionables, rarezas y más en un marketplace pensado para jugadores y coleccionistas."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="DEXswap — Mercado de cartas Pokémon TCG" />
+    <meta
+      name="twitter:description"
+      content="Mercado online de cartas Pokémon: compra, venta e intercambio de cartas coleccionables y TCG."
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "DEXswap",
+        "description": "Mercado de cartas Pokémon TCG: compra, venta e intercambio de cartas coleccionables."
+      }
+    </script>
+  </head>
+  <body>
+    <!-- SVG Filter for Liquid Glass Effect -->
+    <svg style="position: absolute; width: 0; height: 0;" xmlns="http://www.w3.org/2000/svg" version="1.1">
+      <defs>
+        <!-- Subtle liquid distortion filter -->
+        <filter id="liquid-distort" x="0%" y="0%" width="100%" height="100%">
+          <feTurbulence 
+            baseFrequency="0.02 0.05" 
+            numOctaves="2" 
+            seed="1" 
+            result="noise"
+            type="fractalNoise" />
+          <feDisplacementMap 
+            in="SourceGraphic" 
+            in2="noise" 
+            scale="8" 
+            xChannelSelector="R" 
+            yChannelSelector="G" />
+        </filter>
+        <!-- Stronger distortion for hover effects -->
+        <filter id="liquid-distort-strong" x="0%" y="0%" width="100%" height="100%">
+          <feTurbulence 
+            baseFrequency="0.03 0.06" 
+            numOctaves="3" 
+            seed="2" 
+            result="noise"
+            type="fractalNoise" />
+          <feDisplacementMap 
+            in="SourceGraphic" 
+            in2="noise" 
+            scale="12" 
+            xChannelSelector="R" 
+            yChannelSelector="G" />
+        </filter>
+      </defs>
+    </svg>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
