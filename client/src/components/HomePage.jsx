@@ -39,45 +39,28 @@ function HomePage({ onUploadClick, onBrowseClick, totalCards, availableCards }) 
       {/* Quick Stats */}
       <section className="stats-section">
         <div className="stat-card glass">
-          <div className="stat-icon">📊</div>
+          <div className="stat-icon" aria-hidden="true">•</div>
           <div className="stat-value">{totalCards || 0}</div>
           <div className="stat-label">Total Cards</div>
         </div>
         <div className="stat-card glass">
-          <div className="stat-icon">✅</div>
+          <div className="stat-icon" aria-hidden="true">•</div>
           <div className="stat-value">{availableCards || 0}</div>
           <div className="stat-label">Available</div>
         </div>
-        <div className="stat-card glass">
-          <div className="stat-icon">🔥</div>
-          <div className="stat-value">New</div>
-          <div className="stat-label">Today</div>
-        </div>
       </section>
 
-      {/* Quick Actions */}
+      {/* Primary Actions */}
       <section className="actions-section">
-        <h2 className="section-title">Quick Actions</h2>
+        <h2 className="section-title">Get started</h2>
         <div className="actions-grid">
           <button className="action-card glass" onClick={onUploadClick}>
-            <div className="action-icon">📤</div>
-            <div className="action-title">Upload Card</div>
-            <div className="action-desc">Sell your Pokemon cards</div>
+            <div className="action-title">Upload a card</div>
+            <div className="action-desc">List something you want to sell or trade</div>
           </button>
-          <button className="action-card glass">
-            <div className="action-icon">🔍</div>
-            <div className="action-title">Search Cards</div>
-            <div className="action-desc">Find specific cards</div>
-          </button>
-          <button className="action-card glass">
-            <div className="action-icon">💎</div>
-            <div className="action-title">Featured</div>
-            <div className="action-desc">Popular cards</div>
-          </button>
-          <button className="action-card glass">
-            <div className="action-icon">⚡</div>
-            <div className="action-title">Hot Deals</div>
-            <div className="action-desc">Best prices</div>
+          <button className="action-card glass" onClick={onBrowseClick}>
+            <div className="action-title">Browse listings</div>
+            <div className="action-desc">Find cards from other collectors</div>
           </button>
         </div>
       </section>

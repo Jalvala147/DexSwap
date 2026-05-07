@@ -1,40 +1,27 @@
 import { useState } from 'react'
 import { cardsService } from '../lib/supabase'
 import EditCardModal from './EditCardModal'
+import TradeModal from './TradeModal'
+import PurchaseModal from './PurchaseModal'
 import './Card.css'
 
 function Card({ card, onUpdate, currentUser }) {
-  const [showTradeForm, setShowTradeForm] = useState(false)
+  const [showTradeModal, setShowTradeModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [purchasing, setPurchasing] = useState(false)
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false)
 
-  const handleBuy = async () => {
+  const handleOpenPurchase = () => {
     if (!currentUser) {
-      alert('Please sign in to purchase cards')
+      alert('Inicia sesión para comprar')
       return
     }
 
     if (currentUser.id === card.owner_id) {
-      alert("You can't buy your own card!")
+      alert('No puedes comprar tu propia carta')
       return
     }
 
-    if (window.confirm(`Buy "${card.name}" for $${card.price}?`)) {
-      setPurchasing(true)
-      try {
-        // Transfer ownership to the buyer
-        await cardsService.update(card.id, {
-          owner_id: currentUser.id,
-          is_available: false
-        })
-        alert('Purchase successful! The card is now yours.')
-        onUpdate()
-      } catch (error) {
-        alert('Error purchasing card: ' + error.message)
-      } finally {
-        setPurchasing(false)
-      }
-    }
+    setShowPurchaseModal(true)
   }
 
   const handleProposeTrade = () => {
@@ -42,7 +29,7 @@ function Card({ card, onUpdate, currentUser }) {
       alert('Please sign in to propose trades')
       return
     }
-    setShowTradeForm(!showTradeForm)
+    setShowTradeModal(true)
   }
 
   const isAvailable = card.is_available
@@ -89,7 +76,7 @@ function Card({ card, onUpdate, currentUser }) {
           </div>
         ) : (
           <div className="card-image no-image">
-            <span className="no-image-icon">🎴</span>
+            <span className="no-image-icon" aria-hidden="true">•</span>
             <span className="no-image-text">No Image</span>
           </div>
         )}
@@ -131,11 +118,10 @@ function Card({ card, onUpdate, currentUser }) {
             <div className="card-actions">
               <div className="action-buttons">
                 <button 
-                  onClick={handleBuy} 
+                  onClick={handleOpenPurchase} 
                   className="buy-button"
-                  disabled={purchasing}
                 >
-                  {purchasing ? 'Processing...' : `Buy Now $${card.price}`}
+                  Comprar — ${card.price}
                 </button>
                 <button 
                   onClick={handleProposeTrade} 
@@ -151,7 +137,7 @@ function Card({ card, onUpdate, currentUser }) {
                 onClick={() => setShowEditModal(true)}
                 className="edit-button"
               >
-                ✏️ Edit Card
+                Edit
               </button>
               <button 
                 onClick={async () => {
@@ -164,7 +150,7 @@ function Card({ card, onUpdate, currentUser }) {
                 }}
                 className={`toggle-availability ${isAvailable ? 'available' : 'unavailable'}`}
               >
-                {isAvailable ? '🔒 Mark Unavailable' : '🔓 Mark Available'}
+                {isAvailable ? 'Mark unavailable' : 'Mark available'}
               </button>
             </div>
           ) : (
@@ -175,12 +161,35 @@ function Card({ card, onUpdate, currentUser }) {
         </div>
       </div>
 
+      {showPurchaseModal && (
+        <PurchaseModal
+          card={card}
+          onClose={() => setShowPurchaseModal(false)}
+          onPurchaseComplete={() => {
+            onUpdate()
+            setShowPurchaseModal(false)
+          }}
+        />
+      )}
+
       {showEditModal && (
         <EditCardModal
           card={card}
           isOpen={showEditModal}
           onClose={() => setShowEditModal(false)}
           onUpdate={onUpdate}
+        />
+      )}
+
+      {showTradeModal && (
+        <TradeModal
+          isOpen={showTradeModal}
+          onClose={() => setShowTradeModal(false)}
+          currentUser={currentUser}
+          requestedCard={card}
+          onTradeCreated={() => {
+            setShowTradeModal(false)
+          }}
         />
       )}
     </>

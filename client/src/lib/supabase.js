@@ -226,6 +226,20 @@ export const cardsService = {
   }
 }
 
+// Purchases service (simulated checkout)
+export const purchasesService = {
+  async getByUser(userId) {
+    const { data, error } = await supabase
+      .from('purchases')
+      .select('*')
+      .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data
+  }
+}
+
 // Profiles service
 export const profilesService = {
   // Get profile by ID
@@ -357,39 +371,97 @@ export const tradesService = {
 
   // Accept a trade (updates both cards' owners)
   async acceptTrade(tradeId) {
-    // First get the trade details
+    // Con RLS en `cards`, el intercambio debe hacerse con RPC `security definer`.
+    const { data: rpcData, error: rpcError } = await supabase.rpc('accept_trade', {
+      trade_id: tradeId
+    })
+    if (!rpcError) return rpcData ?? true
+
+    const rpcMsg = rpcError.message || String(rpcError)
+    const rpcMissing =
+      /function .* does not exist|Could not find the function/i.test(rpcMsg) ||
+      rpcError.code === 'PGRST202'
+
+    // Solo fallback si no hay RPC (dev sin RLS). Si el RPC existe pero falla, no seguir.
+    if (!rpcMissing) {
+      throw new Error(rpcMsg)
+    }
+
     const { data: trade, error: fetchError } = await supabase
       .from('trades')
       .select('*')
       .eq('id', tradeId)
       .single()
-    
+
     if (fetchError) throw fetchError
 
-    // Update the trade status
     const { error: updateError } = await supabase
       .from('trades')
       .update({ status: 'accepted' })
       .eq('id', tradeId)
-    
+
     if (updateError) throw updateError
 
-    // Swap card ownership
     const { error: swap1Error } = await supabase
       .from('cards')
       .update({ owner_id: trade.receiver_id })
       .eq('id', trade.card_offered_id)
-    
+
     if (swap1Error) throw swap1Error
 
     const { error: swap2Error } = await supabase
       .from('cards')
       .update({ owner_id: trade.sender_id })
       .eq('id', trade.card_requested_id)
-    
+
     if (swap2Error) throw swap2Error
 
     return true
+  }
+}
+
+// Trade messages service (chat per trade)
+export const tradeMessagesService = {
+  async getByTrade(tradeId) {
+    const { data, error } = await supabase
+      .from('trade_messages')
+      .select('*')
+      .eq('trade_id', tradeId)
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+    return data
+  },
+
+  async send({ trade_id, sender_id, content }) {
+    const { data, error } = await supabase
+      .from('trade_messages')
+      .insert([{ trade_id, sender_id, content }])
+      .select('*')
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  subscribeToTrade(tradeId, onChange) {
+    return supabase
+      .channel(`trade-messages-${tradeId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'trade_messages', filter: `trade_id=eq.${tradeId}` },
+        onChange
+      )
+      .subscribe()
+  }
+}
+
+// Marketplace RPCs (needed when cards are protected by RLS)
+export const marketplaceService = {
+  async purchaseCard({ card_id }) {
+    const { data, error } = await supabase.rpc('purchase_card', { card_id })
+    if (error) throw error
+    return data
   }
 }
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import './AuthModal.css'
 
-function AuthModal({ isOpen, onClose }) {
+function AuthModal({ isOpen, onClose, onAuthSuccess }) {
   const [mode, setMode] = useState('login') // 'login' or 'signup'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,6 +22,7 @@ function AuthModal({ isOpen, onClose }) {
     try {
       if (mode === 'login') {
         await signIn(email, password)
+        if (typeof onAuthSuccess === 'function') onAuthSuccess({ mode: 'login' })
         onClose()
       } else {
         if (!username.trim()) {
@@ -30,6 +31,7 @@ function AuthModal({ isOpen, onClose }) {
           return
         }
         await signUp(email, password, username)
+        if (typeof onAuthSuccess === 'function') onAuthSuccess({ mode: 'signup' })
         setMessage('Check your email for the confirmation link!')
       }
     } catch (err) {

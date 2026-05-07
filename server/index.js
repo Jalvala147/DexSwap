@@ -1,5 +1,7 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const paypal = require('./paypal');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -274,6 +276,66 @@ app.get('/api/cards/:id/bids', (req, res) => {
       res.json(rows);
     }
   });
+});
+
+// --- PayPal (Sandbox / Live): crea y captura órdenes; el secreto solo en servidor ---
+app.get('/api/paypal/status', (req, res) => {
+  res.json({
+    enabled: paypal.isConfigured(),
+    sandbox: paypal.SANDBOX,
+  });
+});
+
+app.get('/api/paypal/client-id', (req, res) => {
+  if (!paypal.isConfigured() || !process.env.PAYPAL_CLIENT_ID) {
+    return res.status(503).json({
+      enabled: false,
+      error: 'PayPal no está configurado en el servidor (.env)',
+    });
+  }
+  res.json({
+    enabled: true,
+    clientId: process.env.PAYPAL_CLIENT_ID,
+    sandbox: paypal.SANDBOX,
+  });
+});
+
+app.post('/api/paypal/create-order', async (req, res) => {
+  try {
+    if (!paypal.isConfigured()) {
+      return res.status(503).json({ error: 'PayPal no configurado' });
+    }
+    const { amount, currency = 'USD', cardId } = req.body || {};
+    if (amount === undefined || amount === null || Number(amount) <= 0) {
+      return res.status(400).json({ error: 'Monto inválido' });
+    }
+    const order = await paypal.createOrder({
+      amountValue: Number(amount),
+      currencyCode: currency,
+      cardId: cardId || '',
+    });
+    res.json({ id: order.id });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Error creando orden PayPal' });
+  }
+});
+
+app.post('/api/paypal/capture-order', async (req, res) => {
+  try {
+    if (!paypal.isConfigured()) {
+      return res.status(503).json({ error: 'PayPal no configurado' });
+    }
+    const { orderID } = req.body || {};
+    if (!orderID) {
+      return res.status(400).json({ error: 'orderID requerido' });
+    }
+    const captureData = await paypal.captureOrder(orderID);
+    res.json({ ok: true, capture: captureData });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message || 'Error capturando pago' });
+  }
 });
 
 app.listen(PORT, () => {

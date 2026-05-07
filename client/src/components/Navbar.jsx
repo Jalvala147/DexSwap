@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
 import './Navbar.css'
@@ -8,8 +8,15 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [pendingAction, setPendingAction] = useState(null) // 'upload' | null
+  const [signingOut, setSigningOut] = useState(false)
 
   const { user, profile, signOut } = useAuth()
+
+  useEffect(() => {
+    // If user becomes available while auth modal is open, we can safely close it.
+    if (user && showAuthModal) setShowAuthModal(false)
+  }, [user, showAuthModal])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -20,6 +27,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
 
   const handleUpload = () => {
     if (!user) {
+      setPendingAction('upload')
       setShowAuthModal(true)
       return
     }
@@ -29,12 +37,23 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
     setIsMenuOpen(false)
   }
 
+  const handleAuthSuccess = () => {
+    if (pendingAction === 'upload' && onUploadClick) {
+      onUploadClick()
+    }
+    setPendingAction(null)
+  }
+
   const handleSignOut = async () => {
+    if (signingOut) return
+    setSigningOut(true)
     try {
       await signOut()
       setShowUserMenu(false)
     } catch (error) {
       console.error('Error signing out:', error)
+    } finally {
+      setSigningOut(false)
     }
   }
 
@@ -50,7 +69,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
             onClick={() => onSidebarToggle && onSidebarToggle()}
             aria-label="Toggle sidebar"
           >
-            ⚡
+            ☰
           </button>
 
           {/* Logo/Brand */}
@@ -67,9 +86,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
             />
-            <button type="submit" className="search-button">
-              🔍
-            </button>
+            <button type="submit" className="search-button">Search</button>
           </form>
 
           {/* Navigation Links */}
@@ -78,26 +95,26 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
               className={`nav-link ${currentView === 'home' ? 'active' : ''}`}
               onClick={() => onViewChange && onViewChange('home')}
             >
-              🏠 Home
+              Home
             </button>
             <button 
               className={`nav-link ${currentView === 'browse' ? 'active' : ''}`}
               onClick={() => onViewChange && onViewChange('browse')}
             >
-              🎴 Browse
+              Browse
             </button>
             <button 
               className="nav-link upload-link"
               onClick={handleUpload}
             >
-              ➕ Upload
+              Upload
             </button>
             {user && (
               <button 
                 className={`nav-link ${currentView === 'my-cards' ? 'active' : ''}`}
                 onClick={() => onViewChange && onViewChange('my-cards')}
               >
-                📦 My Cards
+                My Cards
               </button>
             )}
           </div>
@@ -133,7 +150,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                         setShowUserMenu(false)
                       }}
                     >
-                      📦 My Cards
+                      My Cards
                     </button>
                     <button 
                       className="dropdown-item"
@@ -142,14 +159,15 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                         setShowUserMenu(false)
                       }}
                     >
-                      ⚙️ Settings
+                      Profile
                     </button>
                     <div className="dropdown-divider"></div>
                     <button 
                       className="dropdown-item logout"
                       onClick={handleSignOut}
+                      disabled={signingOut}
                     >
-                      🚪 Sign Out
+                      {signingOut ? 'Signing out…' : 'Sign Out'}
                     </button>
                   </div>
                 )}
@@ -159,7 +177,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 className="login-button"
                 onClick={() => setShowAuthModal(true)}
               >
-                🔐 Login
+                Login
               </button>
             )}
           </div>
@@ -184,7 +202,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 setIsMenuOpen(false)
               }}
             >
-              🏠 Home
+              Home
             </button>
             <button 
               className={`mobile-nav-link ${currentView === 'browse' ? 'active' : ''}`}
@@ -193,7 +211,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 setIsMenuOpen(false)
               }}
             >
-              🎴 Browse Cards
+              Browse
             </button>
             <button 
               className="mobile-nav-link"
@@ -202,7 +220,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 setIsMenuOpen(false)
               }}
             >
-              ➕ Upload Card
+              Upload
             </button>
             {user && (
               <button 
@@ -212,14 +230,14 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                   setIsMenuOpen(false)
                 }}
               >
-                📦 My Cards
+                My Cards
               </button>
             )}
             <div className="mobile-menu-divider"></div>
             {user ? (
               <>
                 <div className="mobile-user-info">
-                  <span className="user-avatar">👤</span>
+                  <span className="user-avatar" aria-hidden="true">•</span>
                   <div className="mobile-user-details">
                     <span className="mobile-user-name">{displayName}</span>
                     <span className="mobile-user-email">{user.email}</span>
@@ -231,8 +249,9 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                     handleSignOut()
                     setIsMenuOpen(false)
                   }}
+                  disabled={signingOut}
                 >
-                  🚪 Sign Out
+                  {signingOut ? 'Signing out…' : 'Sign Out'}
                 </button>
               </>
             ) : (
@@ -243,7 +262,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                   setIsMenuOpen(false)
                 }}
               >
-                🔐 Login / Sign Up
+                Login / Sign Up
               </button>
             )}
           </div>
@@ -252,7 +271,11 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
 
       <AuthModal 
         isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
+        onClose={() => {
+          setShowAuthModal(false)
+          setPendingAction(null)
+        }}
+        onAuthSuccess={handleAuthSuccess}
       />
     </>
   )

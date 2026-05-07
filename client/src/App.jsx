@@ -7,6 +7,7 @@ import ElementPage from './components/ElementPage'
 import HomePage from './components/HomePage'
 import CardList from './components/CardList'
 import UploadCard from './components/UploadCard'
+import ProfilePage from './components/ProfilePage'
 import './App.css'
 
 function App() {
@@ -154,6 +155,8 @@ function App() {
           element={selectedElement}
           onBack={handleBackFromElement}
         />
+      ) : currentView === 'profile' ? (
+        <ProfilePage />
       ) : loading ? (
         <div className="loading glass">
           <p>Loading cards...</p>

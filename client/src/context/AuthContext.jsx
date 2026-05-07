@@ -5,6 +5,14 @@ const AuthContext = createContext({})
 
 export const useAuth = () => useContext(AuthContext)
 
+const withTimeout = (promise, ms) => {
+  let timeoutId
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('Request timed out')), ms)
+  })
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId))
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -93,10 +101,21 @@ export function AuthProvider({ children }) {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-    setUser(null)
-    setProfile(null)
+    try {
+      const result = await withTimeout(supabase.auth.signOut(), 8000)
+      if (result?.error) throw result.error
+    } catch (err) {
+      // If Supabase hangs/fails, still clear local state so UI doesn't get stuck.
+      // Best-effort sign out (fire-and-forget) to clean up server session.
+      try {
+        supabase.auth.signOut()
+      } catch {
+        // ignore
+      }
+    } finally {
+      setUser(null)
+      setProfile(null)
+    }
   }
 
   const updateProfile = async (updates) => {

@@ -23,10 +23,14 @@ const CONDITION_OPTIONS = [
 
 function UploadCard({ onCardAdded, currentUserId }) {
   const [formData, setFormData] = useState({
+    category: 'pokemon', // 'pokemon' | 'merch'
     name: '',
     rarity: '',
     condition: '',
     price: '',
+    merch_type: '',
+    merch_condition: '',
+    merch_brand: '',
     image: null
   })
   const [preview, setPreview] = useState(null)
@@ -54,7 +58,11 @@ function UploadCard({ onCardAdded, currentUserId }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    if (!formData.name || !formData.price || !formData.rarity || !formData.condition) {
+    const isPokemon = formData.category === 'pokemon'
+    const requiredOk =
+      !!formData.name && !!formData.price && (!isPokemon || (!!formData.rarity && !!formData.condition))
+
+    if (!requiredOk) {
       alert('Please fill in all required fields')
       return
     }
@@ -83,12 +91,16 @@ function UploadCard({ onCardAdded, currentUserId }) {
 
       // Build card data - only include owner_id if we have one
       const cardData = {
+        category: formData.category,
         name: formData.name,
-        rarity: formData.rarity,
-        condition: formData.condition,
+        rarity: isPokemon ? formData.rarity : null,
+        condition: isPokemon ? formData.condition : null,
         price: parseFloat(formData.price),
         image_url: imageUrl,
-        is_available: true
+        is_available: true,
+        merch_type: isPokemon ? null : (formData.merch_type || null),
+        merch_condition: isPokemon ? null : (formData.merch_condition || null),
+        merch_brand: isPokemon ? null : (formData.merch_brand || null)
       }
 
       // Only add owner_id if user is logged in
@@ -104,10 +116,14 @@ function UploadCard({ onCardAdded, currentUserId }) {
       
       // Reset form
       setFormData({
+        category: 'pokemon',
         name: '',
         rarity: '',
         condition: '',
         price: '',
+        merch_type: '',
+        merch_condition: '',
+        merch_brand: '',
         image: null
       })
       setPreview(null)
@@ -121,51 +137,98 @@ function UploadCard({ onCardAdded, currentUserId }) {
 
   return (
     <div className="upload-card glass-strong">
-      <h2>Upload a Pokemon Card</h2>
+      <h2>Upload listing</h2>
       <form onSubmit={handleSubmit}>
         <div className="upload-form-grid">
           <div className="form-section">
             <div className="form-group">
-              <label>Card Name *</label>
+              <label>Category *</label>
+              <select name="category" value={formData.category} onChange={handleChange} required>
+                <option value="pokemon">Pokémon card</option>
+                <option value="merch">Merchandising</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Name *</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="e.g., Pikachu VMAX"
+                placeholder="e.g., Pikachu VMAX / Plush / Binder"
                 required
               />
             </div>
 
-            <div className="form-group">
-              <label>Rarity *</label>
-              <select
-                name="rarity"
-                value={formData.rarity}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Rarity</option>
-                {RARITY_OPTIONS.map(rarity => (
-                  <option key={rarity} value={rarity}>{rarity}</option>
-                ))}
-              </select>
-            </div>
+            {formData.category === 'pokemon' ? (
+              <div className="form-group">
+                <label>Rarity *</label>
+                <select
+                  name="rarity"
+                  value={formData.rarity}
+                  onChange={handleChange}
+                  required={formData.category === 'pokemon'}
+                >
+                  <option value="">Select Rarity</option>
+                  {RARITY_OPTIONS.map(rarity => (
+                    <option key={rarity} value={rarity}>{rarity}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label>Merch type</label>
+                <input
+                  type="text"
+                  name="merch_type"
+                  value={formData.merch_type}
+                  onChange={handleChange}
+                  placeholder="e.g., Plush, Binder, Figure"
+                />
+              </div>
+            )}
 
-            <div className="form-group">
-              <label>Condition *</label>
-              <select
-                name="condition"
-                value={formData.condition}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Condition</option>
-                {CONDITION_OPTIONS.map(condition => (
-                  <option key={condition} value={condition}>{condition}</option>
-                ))}
-              </select>
-            </div>
+            {formData.category === 'pokemon' ? (
+              <div className="form-group">
+                <label>Condition *</label>
+                <select
+                  name="condition"
+                  value={formData.condition}
+                  onChange={handleChange}
+                  required={formData.category === 'pokemon'}
+                >
+                  <option value="">Select Condition</option>
+                  {CONDITION_OPTIONS.map(condition => (
+                    <option key={condition} value={condition}>{condition}</option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label>Merch condition</label>
+                <input
+                  type="text"
+                  name="merch_condition"
+                  value={formData.merch_condition}
+                  onChange={handleChange}
+                  placeholder="e.g., New, Like new, Used"
+                />
+              </div>
+            )}
+
+            {formData.category === 'merch' && (
+              <div className="form-group">
+                <label>Brand</label>
+                <input
+                  type="text"
+                  name="merch_brand"
+                  value={formData.merch_brand}
+                  onChange={handleChange}
+                  placeholder="e.g., Pokémon Center"
+                />
+              </div>
+            )}
 
             <div className="form-group">
               <label>Price ($) *</label>

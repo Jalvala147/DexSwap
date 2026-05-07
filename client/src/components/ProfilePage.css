@@ -1,0 +1,264 @@
+.profile-page {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.profile-header {
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.profile-title h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+}
+
+.profile-subtitle {
+  margin: 6px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-tabs button {
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.profile-tabs button.active {
+  border-color: var(--gold);
+  background: rgba(255, 184, 0, 0.1);
+}
+
+.account-panel {
+  padding: 20px 24px;
+  max-width: 560px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.form-row label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.trades-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 16px;
+  width: 100%;
+  min-height: 520px;
+}
+
+.trades-list {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.trades-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.trades-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.trade-item {
+  width: 100%;
+  text-align: left;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid var(--gold-border);
+  background: rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.trade-item.active {
+  border-color: var(--gold);
+  box-shadow: 0 0 14px var(--gold-glow);
+}
+
+.trade-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.trade-with {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.trade-status {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-border);
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.status-accepted {
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #86efac;
+}
+
+.status-rejected,
+.status-cancelled {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+}
+
+.trade-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.trade-line {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.trade-chat {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.trade-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gold-border);
+  margin-bottom: 12px;
+}
+
+.trade-chat-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.trade-chat-actions .danger {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.trade-chat-actions .danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.trade-chat-title {
+  font-weight: 700;
+}
+
+.trade-chat-meta {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.trade-chat-messages {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 6px;
+}
+
+.chat-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 82%;
+}
+
+.chat-msg.mine {
+  align-self: flex-end;
+  text-align: right;
+}
+
+.chat-msg.theirs {
+  align-self: flex-start;
+  text-align: left;
+}
+
+.chat-bubble {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 184, 0, 0.08);
+  border: 1px solid var(--gold-border);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+.chat-msg.mine .chat-bubble {
+  background: rgba(0, 212, 255, 0.08);
+  border-color: rgba(0, 212, 255, 0.35);
+}
+
+.chat-time {
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.trade-chat-input {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gold-border);
+}
+
+.trade-chat-input input {
+  flex: 1;
+  min-width: 0;
+}
+
+.muted {
+  color: var(--text-secondary);
+  font-size: 14px;
+  padding: 10px;
+}
+
+@media (max-width: 900px) {
+  .trades-layout {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -1,0 +1,78 @@
+.purchase-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 1900;
+}
+
+.purchase-modal {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.purchase-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.purchase-modal-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.purchase-close {
+  width: 40px;
+  height: 40px;
+  min-width: auto;
+  border-radius: 10px;
+}
+
+.purchase-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 16px;
+}
+
+.purchase-price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.purchase-muted {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+  line-height: 1.45;
+}
+
+.purchase-muted code {
+  font-size: 12px;
+}
+
+.paypal-zone {
+  min-height: 120px;
+}
+
+.purchase-divider {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin: 16px 0 12px;
+}
+
+.purchase-sim-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+}
