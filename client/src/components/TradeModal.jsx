@@ -33,7 +33,7 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
     e.preventDefault()
     if (!canSubmit) return
     if (currentUser.id === receiverId) {
-      alert("You can't trade with yourself.")
+      alert("No puedes intercambiar contigo mismo.")
       return
     }
 
@@ -55,11 +55,11 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
         })
       }
 
-      alert('Trade proposed. You can continue in Profile → Trades.')
+      alert('Intercambio propuesto. Puedes continuar en Perfil → Intercambios.')
       if (typeof onTradeCreated === 'function') onTradeCreated(trade)
       onClose()
     } catch (err) {
-      alert('Error creating trade: ' + err.message)
+      alert('Error al crear el intercambio: ' + err.message)
     } finally {
       setSubmitting(false)
     }
@@ -69,7 +69,7 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
     <div className="trade-modal-overlay" onClick={onClose}>
       <div className="trade-modal glass-strong" onClick={(e) => e.stopPropagation()}>
         <div className="trade-modal-header">
-          <h2>Propose trade</h2>
+          <h2>Proponer intercambio</h2>
           <button className="trade-close" onClick={onClose} aria-label="Close">
             ×
           </button>
@@ -77,14 +77,14 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
 
         <div className="trade-modal-body">
           <div className="trade-summary glass">
-            <div className="trade-summary-title">Requested listing</div>
-            <div className="trade-summary-line">{requestedCard?.name || 'Card'}</div>
-            <div className="trade-summary-line muted">Price: ${requestedCard?.price ?? '—'}</div>
+            <div className="trade-summary-title">Carta solicitada</div>
+            <div className="trade-summary-line">{requestedCard?.name || 'Carta'}</div>
+            <div className="trade-summary-line muted">Precio: ${requestedCard?.price ?? '—'}</div>
           </div>
 
           <form onSubmit={handleSubmit} className="trade-form">
             <div className="form-group">
-              <label>Your offered card</label>
+              <label>Tu carta ofrecida</label>
               <select
                 value={selectedOfferId}
                 onChange={(e) => setSelectedOfferId(e.target.value)}
@@ -92,32 +92,32 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
                 required
               >
                 <option value="">
-                  {loading ? 'Loading your cards…' : 'Select one of your cards'}
+                  {loading ? 'Cargando tus cartas…' : 'Selecciona una de tus cartas'}
                 </option>
                 {myCards.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} {c.is_available ? '' : '(not available)'}
+                    {c.name} {c.is_available ? '' : '(no disponible)'}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="form-group">
-              <label>Message (optional)</label>
+              <label>Mensaje (opcional)</label>
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Add details (condition, shipping, etc.)"
+                placeholder="Agrega detalles (estado, envío, etc.)"
                 rows={4}
               />
             </div>
 
             <div className="trade-actions">
               <button type="button" onClick={onClose} className="secondary">
-                Cancel
+                Cancelar
               </button>
               <button type="submit" disabled={!canSubmit}>
-                {submitting ? 'Sending…' : 'Send trade offer'}
+                {submitting ? 'Enviando…' : 'Enviar oferta'}
               </button>
             </div>
           </form>

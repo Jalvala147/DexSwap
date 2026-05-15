@@ -8,20 +8,20 @@ function HomePage({ onUploadClick, onBrowseClick, totalCards, availableCards }) 
         <div className="hero-content">
           <h1 className="hero-title">
             <span className="hero-icon"></span>
-            Welcome to DEXswap
+            Bienvenido a DEXswap
           </h1>
           <p className="hero-subtitle">
-            Buy, sell, and trade your favorite Pokémon TCG cards on DEXswap — the online marketplace for collectors and players.
+            Compra, vende e intercambia tus cartas Pokémon TCG favoritas en DEXswap — el mercado en línea para coleccionistas y jugadores.
           </p>
           <p className="hero-seo-line">
             Mercado de cartas Pokémon: compra, venta, intercambio y colección de cartas holográficas, rarezas y expansiones del juego de cartas coleccionables (TCG).
           </p>
           <div className="hero-actions">
             <button className="btn-primary btn-large" onClick={onUploadClick}>
-              Upload Your First Card
+              Sube tu primera carta
             </button>
             <button className="btn-large" onClick={onBrowseClick}>
-              Browse All Cards
+              Explorar todas las cartas
             </button>
           </div>
         </div>
@@ -41,26 +41,26 @@ function HomePage({ onUploadClick, onBrowseClick, totalCards, availableCards }) 
         <div className="stat-card glass">
           <div className="stat-icon" aria-hidden="true">•</div>
           <div className="stat-value">{totalCards || 0}</div>
-          <div className="stat-label">Total Cards</div>
+          <div className="stat-label">Total de Cartas</div>
         </div>
         <div className="stat-card glass">
           <div className="stat-icon" aria-hidden="true">•</div>
           <div className="stat-value">{availableCards || 0}</div>
-          <div className="stat-label">Available</div>
+          <div className="stat-label">Disponibles</div>
         </div>
       </section>
 
       {/* Primary Actions */}
       <section className="actions-section">
-        <h2 className="section-title">Get started</h2>
+        <h2 className="section-title">Comenzar</h2>
         <div className="actions-grid">
           <button className="action-card glass" onClick={onUploadClick}>
-            <div className="action-title">Upload a card</div>
-            <div className="action-desc">List something you want to sell or trade</div>
+            <div className="action-title">Subir una carta</div>
+            <div className="action-desc">Publica algo que quieras vender o intercambiar</div>
           </button>
           <button className="action-card glass" onClick={onBrowseClick}>
-            <div className="action-title">Browse listings</div>
-            <div className="action-desc">Find cards from other collectors</div>
+            <div className="action-title">Explorar publicaciones</div>
+            <div className="action-desc">Encuentra cartas de otros coleccionistas</div>
           </button>
         </div>
       </section>

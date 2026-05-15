@@ -37,7 +37,7 @@ function ElementPage({ element, onBack }) {
     <div className="element-page">
       <div className="element-header glass-strong">
         <button className="back-button" onClick={onBack}>
-          ← Back
+          ← Volver
         </button>
         <div className="element-header-content">
           <div 
@@ -47,9 +47,9 @@ function ElementPage({ element, onBack }) {
             {element.icon}
           </div>
           <div>
-            <h1 className="element-title">{element.name} Type</h1>
+            <h1 className="element-title">Tipo {element.name}</h1>
             <p className="element-description">
-              Explore all {element.name.toLowerCase()} type Pokemon cards
+              Explora todas las cartas Pokémon tipo {element.name.toLowerCase()}
             </p>
           </div>
         </div>
@@ -57,7 +57,7 @@ function ElementPage({ element, onBack }) {
 
       {loading ? (
         <div className="loading glass">
-          <p>Loading {element.name} cards...</p>
+          <p>Cargando cartas tipo {element.name}...</p>
         </div>
       ) : (
         <CardList 

@@ -26,13 +26,13 @@ function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         onClose()
       } else {
         if (!username.trim()) {
-          setError('Username is required')
+          setError('El nombre de usuario es obligatorio')
           setLoading(false)
           return
         }
         await signUp(email, password, username)
         if (typeof onAuthSuccess === 'function') onAuthSuccess({ mode: 'signup' })
-        setMessage('Check your email for the confirmation link!')
+        setMessage('¡Revisa tu correo para ver el enlace de confirmación!')
       }
     } catch (err) {
       setError(err.message)
@@ -56,19 +56,19 @@ function AuthModal({ isOpen, onClose, onAuthSuccess }) {
         
         <div className="auth-header">
           <div className="auth-logo">⚡</div>
-          <h2>{mode === 'login' ? 'Welcome Back' : 'Join DexSwap'}</h2>
-          <p>{mode === 'login' ? 'Sign in to your account' : 'Create your trainer account'}</p>
+          <h2>{mode === 'login' ? 'Bienvenido de nuevo' : 'Únete a DexSwap'}</h2>
+          <p>{mode === 'login' ? 'Inicia sesión en tu cuenta' : 'Crea tu cuenta de entrenador'}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           {mode === 'signup' && (
             <div className="form-group">
-              <label>Username</label>
+              <label>Nombre de usuario</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Choose a username"
+                placeholder="Elige un nombre de usuario"
                 required={mode === 'signup'}
               />
             </div>
@@ -80,13 +80,13 @@ function AuthModal({ isOpen, onClose, onAuthSuccess }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
+              placeholder="tu@email.com"
               required
             />
           </div>
 
           <div className="form-group">
-            <label>Password</label>
+            <label>Contraseña</label>
             <input
               type="password"
               value={password}
@@ -104,16 +104,16 @@ function AuthModal({ isOpen, onClose, onAuthSuccess }) {
             {loading ? (
               <span className="loading-spinner">⚡</span>
             ) : (
-              mode === 'login' ? 'Sign In' : 'Create Account'
+              mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'
             )}
           </button>
         </form>
 
         <div className="auth-footer">
           <p>
-            {mode === 'login' ? "Don't have an account?" : "Already have an account?"}
+            {mode === 'login' ? "¿No tienes cuenta?" : "¿Ya tienes cuenta?"}
             <button type="button" onClick={switchMode} className="switch-mode-btn">
-              {mode === 'login' ? 'Sign Up' : 'Sign In'}
+              {mode === 'login' ? 'Regístrate' : 'Inicia Sesión'}
             </button>
           </p>
         </div>

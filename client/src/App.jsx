@@ -159,13 +159,13 @@ function App() {
         <ProfilePage />
       ) : loading ? (
         <div className="loading glass">
-          <p>Loading cards...</p>
+          <p>Cargando cartas...</p>
         </div>
       ) : currentView === 'my-cards' ? (
         <>
           <div className="page-header glass">
-            <h2>📦 My Cards</h2>
-            <p>{user ? `You have ${getDisplayCards().length} cards` : 'Sign in to see your cards'}</p>
+            <h2>📦 Mis Cartas</h2>
+            <p>{user ? `Tienes ${getDisplayCards().length} cartas` : 'Inicia sesión para ver tus cartas'}</p>
           </div>
           {user ? (
             <CardList 
@@ -176,7 +176,7 @@ function App() {
             />
           ) : (
             <div className="empty-state glass">
-              <p>Please sign in to view your cards</p>
+              <p>Por favor, inicia sesión para ver tus cartas</p>
             </div>
           )}
         </>

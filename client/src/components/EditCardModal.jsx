@@ -96,13 +96,13 @@ function EditCardModal({ card, isOpen, onClose, onUpdate }) {
       <div className="edit-modal glass-strong" onClick={(e) => e.stopPropagation()}>
         <button className="close-btn" onClick={onClose}>×</button>
         
-        <h2>Edit Card</h2>
+        <h2>Editar Carta</h2>
 
         <form onSubmit={handleSubmit}>
           <div className="edit-form-grid">
             <div className="form-section">
               <div className="form-group">
-                <label>Card Name</label>
+                <label>Nombre de la Carta</label>
                 <input
                   type="text"
                   name="name"
@@ -113,14 +113,14 @@ function EditCardModal({ card, isOpen, onClose, onUpdate }) {
               </div>
 
               <div className="form-group">
-                <label>Rarity</label>
+                <label>Rareza</label>
                 <select
                   name="rarity"
                   value={formData.rarity}
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Rarity</option>
+                  <option value="">Seleccionar Rareza</option>
                   {RARITY_OPTIONS.map(rarity => (
                     <option key={rarity} value={rarity}>{rarity}</option>
                   ))}
@@ -128,14 +128,14 @@ function EditCardModal({ card, isOpen, onClose, onUpdate }) {
               </div>
 
               <div className="form-group">
-                <label>Condition</label>
+                <label>Estado</label>
                 <select
                   name="condition"
                   value={formData.condition}
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Select Condition</option>
+                  <option value="">Seleccionar Estado</option>
                   {CONDITION_OPTIONS.map(condition => (
                     <option key={condition} value={condition}>{condition}</option>
                   ))}
@@ -143,7 +143,7 @@ function EditCardModal({ card, isOpen, onClose, onUpdate }) {
               </div>
 
               <div className="form-group">
-                <label>Price ($)</label>
+                <label>Precio ($)</label>
                 <input
                   type="number"
                   name="price"
@@ -158,7 +158,7 @@ function EditCardModal({ card, isOpen, onClose, onUpdate }) {
 
             <div className="image-section">
               <div className="form-group">
-                <label>Card Image</label>
+                <label>Imagen de la Carta</label>
                 <div className="image-upload-area">
                   {preview ? (
                     <div className="image-preview">
@@ -168,7 +168,7 @@ function EditCardModal({ card, isOpen, onClose, onUpdate }) {
                         className="change-image-btn"
                         onClick={() => document.getElementById('edit-image-input').click()}
                       >
-                        Change Image
+                        Cambiar Imagen
                       </button>
                     </div>
                   ) : (
@@ -177,7 +177,7 @@ function EditCardModal({ card, isOpen, onClose, onUpdate }) {
                       onClick={() => document.getElementById('edit-image-input').click()}
                     >
                       <span className="upload-icon">📷</span>
-                      <span>Click to upload image</span>
+                      <span>Haz clic para subir una imagen</span>
                     </div>
                   )}
                   <input
@@ -194,10 +194,10 @@ function EditCardModal({ card, isOpen, onClose, onUpdate }) {
 
           <div className="form-actions">
             <button type="button" onClick={onClose} className="cancel-btn">
-              Cancel
+              Cancelar
             </button>
             <button type="submit" className="save-btn" disabled={saving}>
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? 'Guardando...' : 'Guardar Cambios'}
             </button>
           </div>
         </form>

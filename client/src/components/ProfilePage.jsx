@@ -154,18 +154,18 @@ function ProfilePage() {
     if (!user || !selectedTrade) return
     if (selectedTrade.status !== 'pending') return
     if (selectedTrade.receiver_id !== user.id) {
-      alert('Only the receiver can reject a trade.')
+      alert('Solo el receptor puede rechazar un intercambio.')
       return
     }
-    if (!window.confirm('Reject this trade?')) return
+    if (!window.confirm('¿Rechazar este intercambio?')) return
 
     setUpdatingTrade(true)
     try {
       await tradesService.updateStatus(selectedTrade.id, 'rejected')
       await fetchTrades()
-      alert('Trade rejected.')
+      alert('Intercambio rechazado.')
     } catch (e) {
-      alert('Error rejecting trade: ' + e.message)
+      alert('Error al rechazar el intercambio: ' + e.message)
     } finally {
       setUpdatingTrade(false)
     }
@@ -175,18 +175,18 @@ function ProfilePage() {
     if (!user || !selectedTrade) return
     if (selectedTrade.status !== 'pending') return
     if (selectedTrade.sender_id !== user.id) {
-      alert('Only the sender can cancel a trade.')
+      alert('Solo el remitente puede cancelar un intercambio.')
       return
     }
-    if (!window.confirm('Cancel this trade?')) return
+    if (!window.confirm('¿Cancelar este intercambio?')) return
 
     setUpdatingTrade(true)
     try {
       await tradesService.updateStatus(selectedTrade.id, 'cancelled')
       await fetchTrades()
-      alert('Trade cancelled.')
+      alert('Intercambio cancelado.')
     } catch (e) {
-      alert('Error cancelling trade: ' + e.message)
+      alert('Error al cancelar el intercambio: ' + e.message)
     } finally {
       setUpdatingTrade(false)
     }
@@ -196,8 +196,8 @@ function ProfilePage() {
     return (
       <div className="profile-page">
         <div className="profile-header glass">
-          <h2>Profile</h2>
-          <p>Please sign in to view your profile and trades.</p>
+          <h2>Perfil</h2>
+          <p>Por favor, inicia sesión para ver tu perfil y tus intercambios.</p>
         </div>
       </div>
     )
@@ -214,10 +214,10 @@ function ProfilePage() {
         </div>
         <div className="profile-tabs">
           <button className={tab === 'trades' ? 'active' : ''} onClick={() => setTab('trades')}>
-            Trades
+            Intercambios
           </button>
           <button className={tab === 'account' ? 'active' : ''} onClick={() => setTab('account')}>
-            Account
+            Cuenta
           </button>
         </div>
       </div>
@@ -225,32 +225,32 @@ function ProfilePage() {
       {tab === 'account' ? (
         <div className="account-panel glass">
           <div className="form-row">
-            <label>Username</label>
+            <label>Nombre de usuario</label>
             <input value={editingUsername} onChange={(e) => setEditingUsername(e.target.value)} />
           </div>
           <button disabled={savingProfile} onClick={handleSaveProfile}>
-            {savingProfile ? 'Saving…' : 'Save'}
+            {savingProfile ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
       ) : (
         <div className="trades-layout">
           <div className="trades-list glass">
             <div className="trades-list-header">
-              <h3>Your trades</h3>
-              <button onClick={fetchTrades} disabled={loadingTrades}>Refresh</button>
+              <h3>Tus intercambios</h3>
+              <button onClick={fetchTrades} disabled={loadingTrades}>Actualizar</button>
             </div>
 
             {loadingTrades ? (
-              <div className="muted">Loading…</div>
+              <div className="muted">Cargando…</div>
             ) : trades.length === 0 ? (
-              <div className="muted">No trades yet. Propose a trade from a listing to start a chat.</div>
+              <div className="muted">Aún no hay intercambios. Propón un intercambio desde una publicación para iniciar un chat.</div>
             ) : (
               <div className="trades-items">
                 {trades.map(t => {
                   const other =
                     t.sender_id === user.id ? t.receiver : t.sender
-                  const otherName = other?.username || 'User'
-                  const requestedName = t.card_requested?.name || 'Card'
+                  const otherName = other?.username || 'Usuario'
+                  const requestedName = t.card_requested?.name || 'Carta'
                   const offeredName = t.card_offered?.name || '—'
                   return (
                     <button
@@ -259,12 +259,12 @@ function ProfilePage() {
                       onClick={() => setSelectedTradeId(t.id)}
                     >
                       <div className="trade-top">
-                        <span className="trade-with">With {otherName}</span>
+                        <span className="trade-with">Con {otherName}</span>
                         <span className={`trade-status status-${t.status}`}>{t.status}</span>
                       </div>
                       <div className="trade-cards">
-                        <span className="trade-line">Requested: {requestedName}</span>
-                        <span className="trade-line">Offered: {offeredName}</span>
+                        <span className="trade-line">Solicitada: {requestedName}</span>
+                        <span className="trade-line">Ofrecida: {offeredName}</span>
                       </div>
                     </button>
                   )
@@ -275,30 +275,30 @@ function ProfilePage() {
 
           <div className="trade-chat glass-strong">
             {!selectedTrade ? (
-              <div className="muted">Select a trade to view chat.</div>
+              <div className="muted">Selecciona un intercambio para ver el chat.</div>
             ) : (
               <>
                 <div className="trade-chat-header">
                   <div>
-                    <div className="trade-chat-title">Trade chat</div>
+                    <div className="trade-chat-title">Chat de intercambio</div>
                     <div className="trade-chat-meta">
-                      {selectedTrade.card_requested?.name || 'Card'}
+                      {selectedTrade.card_requested?.name || 'Carta'}
                     </div>
                   </div>
                   <div className="trade-chat-actions">
                     {selectedTrade.status === 'pending' && selectedTrade.receiver_id === user.id && (
                       <>
                         <button disabled={updatingTrade} onClick={handleRejectTrade} className="danger">
-                          Reject
+                          Rechazar
                         </button>
                         <button disabled={updatingTrade} onClick={handleAcceptTrade}>
-                          Accept
+                          Aceptar
                         </button>
                       </>
                     )}
                     {selectedTrade.status === 'pending' && selectedTrade.sender_id === user.id && (
                       <button disabled={updatingTrade} onClick={handleCancelTrade} className="danger">
-                        Cancel
+                        Cancelar
                       </button>
                     )}
                   </div>
@@ -306,9 +306,9 @@ function ProfilePage() {
 
                 <div className="trade-chat-messages">
                   {loadingMessages ? (
-                    <div className="muted">Loading messages…</div>
+                    <div className="muted">Cargando mensajes…</div>
                   ) : messages.length === 0 ? (
-                    <div className="muted">No messages yet. Say hello.</div>
+                    <div className="muted">Aún no hay mensajes. ¡Di hola!</div>
                   ) : (
                     messages.map(m => (
                       <div
@@ -328,13 +328,13 @@ function ProfilePage() {
                   <input
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
-                    placeholder="Write a message…"
+                    placeholder="Escribe un mensaje…"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleSendMessage()
                     }}
                   />
                   <button disabled={sending || !messageText.trim()} onClick={handleSendMessage}>
-                    {sending ? 'Sending…' : 'Send'}
+                    {sending ? 'Enviando…' : 'Enviar'}
                   </button>
                 </div>
               </>

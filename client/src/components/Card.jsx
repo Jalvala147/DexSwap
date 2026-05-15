@@ -26,14 +26,14 @@ function Card({ card, onUpdate, currentUser }) {
 
   const handleProposeTrade = () => {
     if (!currentUser) {
-      alert('Please sign in to propose trades')
+      alert('Inicia sesión para proponer intercambios')
       return
     }
     setShowTradeModal(true)
   }
 
   const isAvailable = card.is_available
-  const ownerName = card.owner?.username || 'Unknown'
+  const ownerName = card.owner?.username || 'Desconocido'
   const isOwner = currentUser && currentUser.id === card.owner_id
 
   // Get rarity color for badge
@@ -67,7 +67,7 @@ function Card({ card, onUpdate, currentUser }) {
     <>
       <div className={`card glass-strong ${!isAvailable ? 'sold' : ''} ${isOwner ? 'owned' : ''}`}>
         {isOwner && (
-          <div className="owner-badge">Your Card</div>
+          <div className="owner-badge">Tu Carta</div>
         )}
         
         {card.image_url ? (
@@ -77,7 +77,7 @@ function Card({ card, onUpdate, currentUser }) {
         ) : (
           <div className="card-image no-image">
             <span className="no-image-icon" aria-hidden="true">•</span>
-            <span className="no-image-text">No Image</span>
+            <span className="no-image-text">Sin Imagen</span>
           </div>
         )}
         
@@ -105,12 +105,12 @@ function Card({ card, onUpdate, currentUser }) {
           
           <div className="card-info">
             <div className="price-section">
-              <span className="price-label">Price:</span>
+              <span className="price-label">Precio:</span>
               <span className="price">${card.price}</span>
             </div>
 
             <div className="seller-info">
-              <span>Owner: {ownerName}</span>
+              <span>Dueño: {ownerName}</span>
             </div>
           </div>
 
@@ -127,7 +127,7 @@ function Card({ card, onUpdate, currentUser }) {
                   onClick={handleProposeTrade} 
                   className="bid-button"
                 >
-                  Propose Trade
+                  Proponer Intercambio
                 </button>
               </div>
             </div>
@@ -137,7 +137,7 @@ function Card({ card, onUpdate, currentUser }) {
                 onClick={() => setShowEditModal(true)}
                 className="edit-button"
               >
-                Edit
+                Editar
               </button>
               <button 
                 onClick={async () => {
@@ -150,12 +150,12 @@ function Card({ card, onUpdate, currentUser }) {
                 }}
                 className={`toggle-availability ${isAvailable ? 'available' : 'unavailable'}`}
               >
-                {isAvailable ? 'Mark unavailable' : 'Mark available'}
+                {isAvailable ? 'Marcar no disponible' : 'Marcar disponible'}
               </button>
             </div>
           ) : (
             <div className="sold-badge">
-              <span>Not Available</span>
+              <span>No Disponible</span>
             </div>
           )}
         </div>

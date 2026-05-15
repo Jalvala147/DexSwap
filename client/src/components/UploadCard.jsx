@@ -63,7 +63,7 @@ function UploadCard({ onCardAdded, currentUserId }) {
       !!formData.name && !!formData.price && (!isPokemon || (!!formData.rarity && !!formData.condition))
 
     if (!requiredOk) {
-      alert('Please fill in all required fields')
+      alert('Por favor, completa todos los campos obligatorios')
       return
     }
 
@@ -111,7 +111,7 @@ function UploadCard({ onCardAdded, currentUserId }) {
       // Create the card in Supabase
       const newCard = await cardsService.create(cardData)
 
-      alert('Card uploaded successfully!')
+      alert('¡Carta subida exitosamente!')
       onCardAdded(newCard)
       
       // Reset form
@@ -129,7 +129,7 @@ function UploadCard({ onCardAdded, currentUserId }) {
       setPreview(null)
       e.target.reset()
     } catch (error) {
-      alert('Error uploading card: ' + error.message)
+      alert('Error al subir la carta: ' + error.message)
     } finally {
       setUploading(false)
     }
@@ -137,40 +137,40 @@ function UploadCard({ onCardAdded, currentUserId }) {
 
   return (
     <div className="upload-card glass-strong">
-      <h2>Upload listing</h2>
+      <h2>Subir publicación</h2>
       <form onSubmit={handleSubmit}>
         <div className="upload-form-grid">
           <div className="form-section">
             <div className="form-group">
-              <label>Category *</label>
+              <label>Categoría *</label>
               <select name="category" value={formData.category} onChange={handleChange} required>
-                <option value="pokemon">Pokémon card</option>
-                <option value="merch">Merchandising</option>
+                <option value="pokemon">Carta Pokémon</option>
+                <option value="merch">Mercancía</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label>Name *</label>
+              <label>Nombre *</label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="e.g., Pikachu VMAX / Plush / Binder"
+                placeholder="ej., Pikachu VMAX / Peluche / Carpeta"
                 required
               />
             </div>
 
             {formData.category === 'pokemon' ? (
               <div className="form-group">
-                <label>Rarity *</label>
+                <label>Rareza *</label>
                 <select
                   name="rarity"
                   value={formData.rarity}
                   onChange={handleChange}
                   required={formData.category === 'pokemon'}
                 >
-                  <option value="">Select Rarity</option>
+                  <option value="">Seleccionar Rareza</option>
                   {RARITY_OPTIONS.map(rarity => (
                     <option key={rarity} value={rarity}>{rarity}</option>
                   ))}
@@ -178,27 +178,27 @@ function UploadCard({ onCardAdded, currentUserId }) {
               </div>
             ) : (
               <div className="form-group">
-                <label>Merch type</label>
+                <label>Tipo de mercancía</label>
                 <input
                   type="text"
                   name="merch_type"
                   value={formData.merch_type}
                   onChange={handleChange}
-                  placeholder="e.g., Plush, Binder, Figure"
+                  placeholder="ej., Peluche, Carpeta, Figura"
                 />
               </div>
             )}
 
             {formData.category === 'pokemon' ? (
               <div className="form-group">
-                <label>Condition *</label>
+                <label>Estado *</label>
                 <select
                   name="condition"
                   value={formData.condition}
                   onChange={handleChange}
                   required={formData.category === 'pokemon'}
                 >
-                  <option value="">Select Condition</option>
+                  <option value="">Seleccionar Estado</option>
                   {CONDITION_OPTIONS.map(condition => (
                     <option key={condition} value={condition}>{condition}</option>
                   ))}
@@ -206,32 +206,32 @@ function UploadCard({ onCardAdded, currentUserId }) {
               </div>
             ) : (
               <div className="form-group">
-                <label>Merch condition</label>
+                <label>Estado de mercancía</label>
                 <input
                   type="text"
                   name="merch_condition"
                   value={formData.merch_condition}
                   onChange={handleChange}
-                  placeholder="e.g., New, Like new, Used"
+                  placeholder="ej., Nuevo, Como nuevo, Usado"
                 />
               </div>
             )}
 
             {formData.category === 'merch' && (
               <div className="form-group">
-                <label>Brand</label>
+                <label>Marca</label>
                 <input
                   type="text"
                   name="merch_brand"
                   value={formData.merch_brand}
                   onChange={handleChange}
-                  placeholder="e.g., Pokémon Center"
+                  placeholder="ej., Pokémon Center"
                 />
               </div>
             )}
 
             <div className="form-group">
-              <label>Price ($) *</label>
+              <label>Precio ($) *</label>
               <input
                 type="number"
                 name="price"
@@ -247,7 +247,7 @@ function UploadCard({ onCardAdded, currentUserId }) {
 
           <div className="image-section">
             <div className="form-group">
-              <label>Card Image</label>
+              <label>Imagen de la Carta</label>
               <div className="image-upload">
                 <input
                   type="file"
@@ -257,7 +257,7 @@ function UploadCard({ onCardAdded, currentUserId }) {
                   style={{ display: 'none' }}
                 />
                 <label htmlFor="image-upload" className="upload-button">
-                  {preview ? 'Change Image' : 'Choose Image'}
+                  {preview ? 'Cambiar Imagen' : 'Elegir Imagen'}
                 </label>
                 {preview && (
                   <div className="image-preview">
@@ -271,7 +271,7 @@ function UploadCard({ onCardAdded, currentUserId }) {
 
         <div className="form-actions">
           <button type="submit" disabled={uploading}>
-            {uploading ? 'Uploading...' : 'Upload Card'}
+            {uploading ? 'Subiendo...' : 'Subir Carta'}
           </button>
         </div>
       </form>

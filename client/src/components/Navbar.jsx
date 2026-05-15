@@ -81,12 +81,12 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
           <form className="navbar-search" onSubmit={handleSearch}>
             <input
               type="text"
-              placeholder="Search cards..."
+              placeholder="Buscar cartas..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
             />
-            <button type="submit" className="search-button">Search</button>
+            <button type="submit" className="search-button">Buscar</button>
           </form>
 
           {/* Navigation Links */}
@@ -95,26 +95,26 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
               className={`nav-link ${currentView === 'home' ? 'active' : ''}`}
               onClick={() => onViewChange && onViewChange('home')}
             >
-              Home
+              Inicio
             </button>
             <button 
               className={`nav-link ${currentView === 'browse' ? 'active' : ''}`}
               onClick={() => onViewChange && onViewChange('browse')}
             >
-              Browse
+              Explorar
             </button>
             <button 
               className="nav-link upload-link"
               onClick={handleUpload}
             >
-              Upload
+              Subir
             </button>
             {user && (
               <button 
                 className={`nav-link ${currentView === 'my-cards' ? 'active' : ''}`}
                 onClick={() => onViewChange && onViewChange('my-cards')}
               >
-                My Cards
+                Mis Cartas
               </button>
             )}
           </div>
@@ -150,7 +150,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                         setShowUserMenu(false)
                       }}
                     >
-                      My Cards
+                      Mis Cartas
                     </button>
                     <button 
                       className="dropdown-item"
@@ -159,7 +159,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                         setShowUserMenu(false)
                       }}
                     >
-                      Profile
+                      Perfil
                     </button>
                     <div className="dropdown-divider"></div>
                     <button 
@@ -167,7 +167,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                       onClick={handleSignOut}
                       disabled={signingOut}
                     >
-                      {signingOut ? 'Signing out…' : 'Sign Out'}
+                      {signingOut ? 'Cerrando sesión…' : 'Cerrar Sesión'}
                     </button>
                   </div>
                 )}
@@ -177,7 +177,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 className="login-button"
                 onClick={() => setShowAuthModal(true)}
               >
-                Login
+                Iniciar Sesión
               </button>
             )}
           </div>
@@ -202,7 +202,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 setIsMenuOpen(false)
               }}
             >
-              Home
+              Inicio
             </button>
             <button 
               className={`mobile-nav-link ${currentView === 'browse' ? 'active' : ''}`}
@@ -211,7 +211,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 setIsMenuOpen(false)
               }}
             >
-              Browse
+              Explorar
             </button>
             <button 
               className="mobile-nav-link"
@@ -220,7 +220,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 setIsMenuOpen(false)
               }}
             >
-              Upload
+              Subir
             </button>
             {user && (
               <button 
@@ -230,7 +230,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                   setIsMenuOpen(false)
                 }}
               >
-                My Cards
+                Mis Cartas
               </button>
             )}
             <div className="mobile-menu-divider"></div>
@@ -251,7 +251,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                   }}
                   disabled={signingOut}
                 >
-                  {signingOut ? 'Signing out…' : 'Sign Out'}
+                  {signingOut ? 'Cerrando sesión…' : 'Cerrar Sesión'}
                 </button>
               </>
             ) : (
@@ -262,7 +262,7 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                   setIsMenuOpen(false)
                 }}
               >
-                Login / Sign Up
+                Iniciar Sesión / Registrarse
               </button>
             )}
           </div>

@@ -15,7 +15,7 @@ function CardList({ cards, onUpdate, searchQuery, currentUser }) {
     <div className="card-list-container">
       {searchQuery && (
         <div className="search-results-info glass">
-          <p>Search results for: <strong>"{searchQuery}"</strong> ({filteredCards.length} {filteredCards.length === 1 ? 'card' : 'cards'})</p>
+          <p>Resultados para: <strong>"{searchQuery}"</strong> ({filteredCards.length} {filteredCards.length === 1 ? 'carta' : 'cartas'})</p>
         </div>
       )}
       
@@ -24,19 +24,19 @@ function CardList({ cards, onUpdate, searchQuery, currentUser }) {
           className={filter === 'all' ? 'active' : ''}
           onClick={() => setFilter('all')}
         >
-          All Cards
+          Todas
         </button>
         <button 
           className={filter === 'available' ? 'active' : ''}
           onClick={() => setFilter('available')}
         >
-          Available
+          Disponibles
         </button>
         <button 
           className={filter === 'sold' ? 'active' : ''}
           onClick={() => setFilter('sold')}
         >
-          Not Available
+          No Disponibles
         </button>
       </div>
 
@@ -44,8 +44,8 @@ function CardList({ cards, onUpdate, searchQuery, currentUser }) {
         <div className="empty-state glass">
           <p>
             {searchQuery 
-              ? `No cards found matching "${searchQuery}". Try a different search!`
-              : 'No cards found. Be the first to upload one!'}
+              ? `No se encontraron cartas para "${searchQuery}". ¡Prueba otra búsqueda!`
+              : 'No se encontraron cartas. ¡Sé el primero en subir una!'}
           </p>
         </div>
       ) : (
