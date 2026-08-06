@@ -3,26 +3,45 @@ import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
 import './Navbar.css'
 
-function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarToggle }) {
-  const [searchQuery, setSearchQuery] = useState('')
+function Navbar({
+  onUploadClick,
+  onSearch,
+  currentView,
+  onViewChange,
+  onSidebarToggle,
+  searchQuery: externalQuery = '',
+}) {
+  const [searchQuery, setSearchQuery] = useState(externalQuery)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [pendingAction, setPendingAction] = useState(null) // 'upload' | null
+  const [pendingAction, setPendingAction] = useState(null)
   const [signingOut, setSigningOut] = useState(false)
 
   const { user, profile, signOut } = useAuth()
 
   useEffect(() => {
-    // If user becomes available while auth modal is open, we can safely close it.
+    setSearchQuery(externalQuery)
+  }, [externalQuery])
+
+  useEffect(() => {
     if (user && showAuthModal) setShowAuthModal(false)
   }, [user, showAuthModal])
 
+  useEffect(() => {
+    if (!showUserMenu) return
+    const onDocClick = () => setShowUserMenu(false)
+    const timer = setTimeout(() => document.addEventListener('click', onDocClick), 0)
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('click', onDocClick)
+    }
+  }, [showUserMenu])
+
   const handleSearch = (e) => {
     e.preventDefault()
-    if (onSearch) {
-      onSearch(searchQuery)
-    }
+    if (onSearch) onSearch(searchQuery.trim())
+    setIsMenuOpen(false)
   }
 
   const handleUpload = () => {
@@ -31,13 +50,12 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
       setShowAuthModal(true)
       return
     }
-    if (onUploadClick) {
-      onUploadClick()
-    }
+    if (onUploadClick) onUploadClick()
     setIsMenuOpen(false)
   }
 
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = ({ mode } = {}) => {
+    if (mode === 'signup') return
     if (pendingAction === 'upload' && onUploadClick) {
       onUploadClick()
     }
@@ -63,54 +81,60 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
     <>
       <nav className="navbar glass-strong">
         <div className="navbar-container">
-          {/* Sidebar Toggle */}
-          <button 
+          <button
+            type="button"
             className="sidebar-toggle"
             onClick={() => onSidebarToggle && onSidebarToggle()}
-            aria-label="Toggle sidebar"
+            aria-label="Abrir tipos Pokémon"
           >
             ☰
           </button>
 
-          {/* Logo/Brand */}
-          <div className="navbar-brand" onClick={() => onViewChange && onViewChange('home')}>
-            <img src="/dexswap.ico" alt="Pokemon Marketplace" className="brand-icon" />
-          </div>
+          <button
+            type="button"
+            className="navbar-brand"
+            onClick={() => onViewChange && onViewChange('home')}
+            aria-label="DEXswap inicio"
+          >
+            <img src="/dexswap.ico" alt="" className="brand-icon" />
+            <span className="brand-text">DEXswap</span>
+          </button>
 
-          {/* Search Bar */}
-          <form className="navbar-search" onSubmit={handleSearch}>
+          <form className="navbar-search" onSubmit={handleSearch} role="search">
             <input
-              type="text"
-              placeholder="Buscar cartas..."
+              type="search"
+              placeholder="Buscar cartas…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
+              aria-label="Buscar cartas"
             />
-            <button type="submit" className="search-button">Buscar</button>
+            <button type="submit" className="search-button">
+              Buscar
+            </button>
           </form>
 
-          {/* Navigation Links */}
           <div className="navbar-links">
-            <button 
+            <button
+              type="button"
               className={`nav-link ${currentView === 'home' ? 'active' : ''}`}
               onClick={() => onViewChange && onViewChange('home')}
             >
               Inicio
             </button>
-            <button 
+            <button
+              type="button"
               className={`nav-link ${currentView === 'browse' ? 'active' : ''}`}
               onClick={() => onViewChange && onViewChange('browse')}
             >
               Explorar
             </button>
-            <button 
-              className="nav-link upload-link"
-              onClick={handleUpload}
-            >
+            <button type="button" className="nav-link upload-link" onClick={handleUpload}>
               Subir
             </button>
             {user && (
-              <button 
+              <button
+                type="button"
                 className={`nav-link ${currentView === 'my-cards' ? 'active' : ''}`}
                 onClick={() => onViewChange && onViewChange('my-cards')}
               >
@@ -119,31 +143,35 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
             )}
           </div>
 
-          {/* User Section */}
           <div className="navbar-user">
             {user ? (
-              <div className="user-menu-container">
-                <button 
+              <div className="user-menu-container" onClick={(e) => e.stopPropagation()}>
+                <button
+                  type="button"
                   className="user-button"
                   onClick={() => setShowUserMenu(!showUserMenu)}
+                  aria-expanded={showUserMenu}
                 >
                   <span className="user-avatar">
                     {profile?.avatar_url ? (
-                      <img src={profile.avatar_url} alt={displayName} />
+                      <img src={profile.avatar_url} alt="" />
                     ) : (
-                      '👤'
+                      <span aria-hidden="true">{displayName.charAt(0).toUpperCase()}</span>
                     )}
                   </span>
                   <span className="user-name">{displayName}</span>
-                  <span className="dropdown-arrow">▼</span>
+                  <span className="dropdown-arrow" aria-hidden="true">
+                    ▼
+                  </span>
                 </button>
-                
+
                 {showUserMenu && (
                   <div className="user-dropdown glass">
                     <div className="dropdown-header">
                       <span className="dropdown-email">{user.email}</span>
                     </div>
-                    <button 
+                    <button
+                      type="button"
                       className="dropdown-item"
                       onClick={() => {
                         onViewChange && onViewChange('my-cards')
@@ -152,7 +180,8 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                     >
                       Mis Cartas
                     </button>
-                    <button 
+                    <button
+                      type="button"
                       className="dropdown-item"
                       onClick={() => {
                         onViewChange && onViewChange('profile')
@@ -161,8 +190,9 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                     >
                       Perfil
                     </button>
-                    <div className="dropdown-divider"></div>
-                    <button 
+                    <div className="dropdown-divider" />
+                    <button
+                      type="button"
                       className="dropdown-item logout"
                       onClick={handleSignOut}
                       disabled={signingOut}
@@ -173,29 +203,26 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 )}
               </div>
             ) : (
-              <button 
-                className="login-button"
-                onClick={() => setShowAuthModal(true)}
-              >
+              <button type="button" className="login-button" onClick={() => setShowAuthModal(true)}>
                 Iniciar Sesión
               </button>
             )}
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <button 
+          <button
+            type="button"
             className="mobile-menu-toggle"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle menu"
+            aria-label="Menú"
           >
             {isMenuOpen ? '✕' : '☰'}
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="mobile-menu glass">
-            <button 
+            <button
+              type="button"
               className={`mobile-nav-link ${currentView === 'home' ? 'active' : ''}`}
               onClick={() => {
                 onViewChange && onViewChange('home')
@@ -204,7 +231,8 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
             >
               Inicio
             </button>
-            <button 
+            <button
+              type="button"
               className={`mobile-nav-link ${currentView === 'browse' ? 'active' : ''}`}
               onClick={() => {
                 onViewChange && onViewChange('browse')
@@ -213,7 +241,8 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
             >
               Explorar
             </button>
-            <button 
+            <button
+              type="button"
               className="mobile-nav-link"
               onClick={() => {
                 handleUpload()
@@ -223,7 +252,8 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
               Subir
             </button>
             {user && (
-              <button 
+              <button
+                type="button"
                 className={`mobile-nav-link ${currentView === 'my-cards' ? 'active' : ''}`}
                 onClick={() => {
                   onViewChange && onViewChange('my-cards')
@@ -233,17 +263,30 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 Mis Cartas
               </button>
             )}
-            <div className="mobile-menu-divider"></div>
+            <div className="mobile-menu-divider" />
             {user ? (
               <>
                 <div className="mobile-user-info">
-                  <span className="user-avatar" aria-hidden="true">•</span>
+                  <span className="user-avatar" aria-hidden="true">
+                    {displayName.charAt(0).toUpperCase()}
+                  </span>
                   <div className="mobile-user-details">
                     <span className="mobile-user-name">{displayName}</span>
                     <span className="mobile-user-email">{user.email}</span>
                   </div>
                 </div>
-                <button 
+                <button
+                  type="button"
+                  className="mobile-nav-link"
+                  onClick={() => {
+                    onViewChange && onViewChange('profile')
+                    setIsMenuOpen(false)
+                  }}
+                >
+                  Perfil
+                </button>
+                <button
+                  type="button"
                   className="mobile-nav-link logout"
                   onClick={() => {
                     handleSignOut()
@@ -255,7 +298,8 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
                 </button>
               </>
             ) : (
-              <button 
+              <button
+                type="button"
                 className="mobile-login-button"
                 onClick={() => {
                   setShowAuthModal(true)
@@ -269,8 +313,8 @@ function Navbar({ onUploadClick, onSearch, currentView, onViewChange, onSidebarT
         )}
       </nav>
 
-      <AuthModal 
-        isOpen={showAuthModal} 
+      <AuthModal
+        isOpen={showAuthModal}
         onClose={() => {
           setShowAuthModal(false)
           setPendingAction(null)

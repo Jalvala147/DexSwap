@@ -2,187 +2,138 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 0;
 }
 
-/* Hero Section */
 .hero-section {
-  padding: 60px 40px;
-  text-align: center;
   position: relative;
+  min-height: min(78vh, 640px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: clamp(48px, 8vw, 96px) clamp(20px, 5vw, 48px);
+  margin: -8px -20px 40px;
+  width: calc(100% + 40px);
+  overflow: hidden;
+  border-radius: 0 0 28px 28px;
+}
+
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(160deg, rgba(12, 10, 8, 0.55) 0%, rgba(12, 10, 8, 0.82) 55%, rgba(12, 10, 8, 0.95) 100%),
+    radial-gradient(ellipse 80% 60% at 50% 20%, rgba(255, 184, 0, 0.18), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 80% 80%, rgba(196, 88, 58, 0.12), transparent 50%),
+    url('/dexswap.png') center / cover no-repeat;
+  transform: scale(1.04);
+  animation: hero-drift 18s ease-in-out infinite alternate;
+  filter: saturate(1.05) brightness(0.55);
 }
 
 .hero-content {
   position: relative;
   z-index: 2;
+  max-width: 720px;
+  animation: hero-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hero-mark {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin: 0 auto 16px;
+  display: block;
+  filter: drop-shadow(0 8px 24px rgba(255, 184, 0, 0.35));
+  animation: hero-mark-pulse 3.5s ease-in-out infinite;
+}
+
+.hero-brand {
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 7vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 0 0 20px;
+  color: var(--gold) !important;
+  text-shadow: 0 2px 24px rgba(255, 184, 0, 0.35);
 }
 
 .hero-title {
-  font-size: 3.5rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-  letter-spacing: -0.03em;
-}
-
-.hero-icon {
-  display: inline-block;
-  margin-right: 16px;
-  font-size: 3.5rem;
-  filter: drop-shadow(0 0 20px var(--gold-glow));
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+  color: var(--text-primary) !important;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
 }
 
 .hero-subtitle {
-  font-size: 1.25rem;
-  margin-bottom: 16px;
+  font-size: clamp(1rem, 2.2vw, 1.15rem);
+  margin: 0 auto 28px;
+  max-width: 28rem;
   font-weight: 400;
   color: var(--text-secondary) !important;
-}
-
-.hero-seo-line {
-  font-size: 1rem;
-  max-width: 42rem;
-  margin: 0 auto 32px;
-  line-height: 1.55;
-  font-weight: 400;
-  color: var(--text-secondary) !important;
-  opacity: 0.95;
-}
-
-/* SEO: bloque visible con términos naturales (Pokémon TCG, marketplace, coleccionistas) */
-.seo-section {
-  padding: 28px 32px;
-  max-width: 900px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.seo-heading {
-  font-size: 1.35rem;
-  font-weight: 600;
-  margin: 0 0 12px;
-  letter-spacing: -0.02em;
-}
-
-.seo-text {
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.65;
-  color: var(--text-secondary) !important;
-}
-
-.seo-text strong {
-  color: var(--text-primary, inherit);
-  font-weight: 600;
 }
 
 .hero-actions {
   display: flex;
-  gap: 20px;
+  gap: 14px;
   justify-content: center;
   flex-wrap: wrap;
 }
 
-/* Stats Section */
-.stats-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
+.hero-secondary {
+  background: rgba(12, 10, 8, 0.45);
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
-.stat-card {
-  padding: 32px 24px;
-  text-align: center;
-  position: relative;
-}
-
-.stat-icon {
-  font-size: 2.5rem;
-  margin-bottom: 12px;
-  filter: drop-shadow(0 0 10px var(--gold-glow));
-}
-
-.stat-value {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--gold) !important;
-  text-shadow: 0 0 20px var(--gold-glow);
-  margin-bottom: 8px;
-  letter-spacing: -0.02em;
-}
-
-.stat-label {
-  font-size: 0.9rem;
-  color: var(--text-secondary) !important;
-  font-weight: 500;
+.hero-meta {
+  margin-top: 28px;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--text-tertiary) !important;
+  opacity: 0.9;
 }
 
-/* Actions Section */
-.actions-section {
-  width: 100%;
+@keyframes hero-drift {
+  from {
+    transform: scale(1.04) translateY(0);
+  }
+  to {
+    transform: scale(1.08) translateY(-1.5%);
+  }
 }
 
-.section-title {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 24px;
-  letter-spacing: -0.02em;
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-}
-
-.action-card {
-  padding: 32px 24px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.action-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--gold);
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 0 25px var(--gold-glow);
-}
-
-.action-icon {
-  font-size: 2.5rem;
-  filter: drop-shadow(0 0 10px var(--gold-glow));
-}
-
-.action-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.action-desc {
-  font-size: 0.9rem;
-  color: var(--text-secondary) !important;
-  font-weight: 400;
+@keyframes hero-mark-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 8px 24px rgba(255, 184, 0, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 8px 32px rgba(255, 184, 0, 0.55));
+  }
 }
 
 @media (max-width: 768px) {
-  .hero-title {
-    font-size: 2.5rem;
-  }
-
-  .hero-icon {
-    font-size: 2.5rem;
-  }
-
-  .hero-subtitle {
-    font-size: 1.1rem;
+  .hero-section {
+    min-height: min(70vh, 560px);
+    margin: -8px -20px 28px;
+    width: calc(100% + 40px);
   }
 
   .hero-actions {
@@ -193,18 +144,12 @@
   .btn-large {
     width: 100%;
   }
-
-  .stats-section {
-    grid-template-columns: 1fr;
-  }
-
-  .actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
-@media (max-width: 480px) {
-  .actions-grid {
-    grid-template-columns: 1fr;
+@media (prefers-reduced-motion: reduce) {
+  .hero-backdrop,
+  .hero-mark,
+  .hero-content {
+    animation: none;
   }
 }

@@ -306,13 +306,16 @@ app.post('/api/paypal/create-order', async (req, res) => {
       return res.status(503).json({ error: 'PayPal no configurado' });
     }
     const { amount, currency = 'USD', cardId } = req.body || {};
+    if (!cardId || typeof cardId !== 'string') {
+      return res.status(400).json({ error: 'cardId requerido' });
+    }
     if (amount === undefined || amount === null || Number(amount) <= 0) {
       return res.status(400).json({ error: 'Monto inválido' });
     }
     const order = await paypal.createOrder({
       amountValue: Number(amount),
       currencyCode: currency,
-      cardId: cardId || '',
+      cardId,
     });
     res.json({ id: order.id });
   } catch (e) {

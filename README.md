@@ -1,102 +1,71 @@
-# Pokemon Card Marketplace
+# DEXswap
 
-A beautiful Pokemon card marketplace with Apple-inspired liquid glass (glassmorphism) design. Sellers can upload cards, and users can place bids or buy cards directly.
+Mercado online de cartas Pokémon TCG: publica, compra e intercambia con otros coleccionistas.
 
-## Features
+## Stack
 
-- 🎴 **Card Upload**: Sellers can upload Pokemon cards with images, descriptions, and prices
-- 💰 **Bidding System**: Users can place bids on cards
-- 🛒 **Buy Now**: Users can purchase cards instantly at the listed price
-- 🎨 **Glassmorphism UI**: Beautiful Apple-inspired liquid glass design with animated gradients
-- 📱 **Responsive**: Works on desktop and mobile devices
+- **Frontend**: React 18 + Vite + React Router
+- **Auth / DB / Storage**: Supabase (Auth, Postgres, Realtime, Storage)
+- **Pagos**: PayPal (sandbox) vía Express local o Vercel serverless (`api/paypal/*`)
+- **Legacy local**: Express + SQLite (`server/`) — solo desarrollo / proxy PayPal; el producto usa Supabase
 
-## Tech Stack
+## Setup
 
-- **Frontend**: React + Vite
-- **Backend**: Node.js + Express
-- **Database**: SQLite
-- **File Upload**: Multer
-
-## Setup Instructions
-
-### 1. Install Dependencies
-
-From the root directory, run:
+### 1. Dependencias
 
 ```bash
 npm run install-all
 ```
 
-This will install dependencies for the root, server, and client.
+### 2. Variables de entorno
 
-### 2. Start the Application
+**Client** (`client/.env`):
 
-Run both the server and client simultaneously:
+```env
+VITE_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
+
+**Server / PayPal** (`server/.env` o Vercel env):
+
+```env
+PAYPAL_CLIENT_ID=...
+PAYPAL_CLIENT_SECRET=...
+```
+
+### 3. Supabase
+
+1. Crea tablas `profiles`, `cards`, `trades`, `trade_messages`, `purchases` con RLS.
+2. Bucket de Storage público `cards`.
+3. RPCs `security definer`: `purchase_card(card_id uuid)` y `accept_trade(trade_id uuid)`.
+4. Opcional: aplica `supabase/migrations/001_element_column.sql` para filtrar por tipo Pokémon.
+
+### 4. Arranque
 
 ```bash
 npm run dev
 ```
 
-Or start them separately:
+- Frontend: http://localhost:3000  
+- API PayPal local: http://localhost:3001  
 
-```bash
-# Terminal 1 - Start server
-npm run server
+## Rutas (SPA)
 
-# Terminal 2 - Start client
-npm run client
-```
+| Ruta | Vista |
+|------|--------|
+| `/` | Inicio + recientes |
+| `/browse` | Catálogo / búsqueda |
+| `/upload` | Publicar (auth) |
+| `/my-cards` | Tus publicaciones |
+| `/profile` | Intercambios y cuenta |
+| `/element/:id` | Filtro por tipo |
 
-### 3. Access the Application
+## Flujos clave
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:3001
+- **Compra**: el cliente verifica disponibilidad/precio → PayPal create/capture → RPC `purchase_card`. La compra simulada solo aparece en desarrollo.
+- **Intercambio**: oferta + chat; aceptar solo vía RPC `accept_trade` (atómico).
+- **Tipos**: al subir una carta Pokémon puedes etiquetar el tipo; el menú lateral filtra por `element` (o coincidencia de texto).
 
-## Project Structure
+## Deploy (Vercel)
 
-```
-pokemon/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/    # React components
-│   │   ├── App.jsx        # Main app component
-│   │   └── main.jsx       # Entry point
-│   └── package.json
-├── server/                # Express backend
-│   ├── index.js          # Server entry point
-│   ├── uploads/          # Uploaded images (created automatically)
-│   └── package.json
-└── package.json          # Root package.json
-```
-
-## API Endpoints
-
-- `GET /api/cards` - Get all cards
-- `GET /api/cards/:id` - Get a single card with bids
-- `POST /api/cards` - Upload a new card (multipart/form-data)
-- `POST /api/bids` - Place a bid on a card
-- `POST /api/purchases` - Buy a card
-- `GET /api/cards/:id/bids` - Get all bids for a card
-
-## Usage
-
-1. **Upload a Card**: Click "Upload Card" button, fill in the details, upload an image, and submit
-2. **Place a Bid**: Click "Place Bid" on any available card, enter your name and bid amount
-3. **Buy Now**: Enter your name and click "Buy Now" to purchase at the listed price
-4. **Filter Cards**: Use the filter buttons to view all cards, available cards, or sold cards
-
-## Database
-
-The application uses SQLite with the following tables:
-- `cards` - Stores card information
-- `bids` - Stores bid information
-- `purchases` - Stores purchase information
-
-The database file (`pokemon_marketplace.db`) is created automatically on first run.
-
-## Notes
-
-- Images are stored in the `server/uploads/` directory
-- The database file is created in the `server/` directory
-- All prices and bids are stored as decimal numbers
-
+`vercel.json` construye `client/` y reescribe rutas SPA a `index.html`. Las funciones en `api/paypal/` manejan PayPal en producción.
