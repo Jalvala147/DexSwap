@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { cardsService, tradesService, tradeMessagesService } from '../lib/supabase'
+import { useToast } from '../context/ToastContext'
 import './TradeModal.css'
 
 function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreated }) {
@@ -8,20 +9,19 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
   const [selectedOfferId, setSelectedOfferId] = useState('')
   const [message, setMessage] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
-    if (!isOpen) return
-    if (!currentUser?.id) return
+    if (!isOpen || !currentUser?.id) return
     setLoading(true)
+    setSelectedOfferId('')
+    setMessage('')
     cardsService
       .getByOwner(currentUser.id)
-      .then((cards) => setMyCards(cards || []))
-      .catch((e) => {
-        console.error('Error loading my cards:', e)
-        setMyCards([])
-      })
+      .then((cards) => setMyCards((cards || []).filter((c) => c.is_available && c.id !== requestedCard?.id)))
+      .catch(() => setMyCards([]))
       .finally(() => setLoading(false))
-  }, [isOpen, currentUser?.id])
+  }, [isOpen, currentUser?.id, requestedCard?.id])
 
   if (!isOpen) return null
 
@@ -33,7 +33,7 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
     e.preventDefault()
     if (!canSubmit) return
     if (currentUser.id === receiverId) {
-      alert("No puedes intercambiar contigo mismo.")
+      toast.warn('No puedes intercambiar contigo mismo.')
       return
     }
 
@@ -43,7 +43,7 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
         sender_id: currentUser.id,
         receiver_id: receiverId,
         card_offered_id: selectedOfferId,
-        card_requested_id: requestedCard.id
+        card_requested_id: requestedCard.id,
       })
 
       const text = message.trim()
@@ -51,15 +51,15 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
         await tradeMessagesService.send({
           trade_id: trade.id,
           sender_id: currentUser.id,
-          content: text
+          content: text,
         })
       }
 
-      alert('Intercambio propuesto. Puedes continuar en Perfil → Intercambios.')
+      toast.success('Intercambio propuesto. Síguelo en Perfil → Intercambios.')
       if (typeof onTradeCreated === 'function') onTradeCreated(trade)
       onClose()
     } catch (err) {
-      alert('Error al crear el intercambio: ' + err.message)
+      toast.error('Error al crear el intercambio: ' + err.message)
     } finally {
       setSubmitting(false)
     }
@@ -70,7 +70,7 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
       <div className="trade-modal glass-strong" onClick={(e) => e.stopPropagation()}>
         <div className="trade-modal-header">
           <h2>Proponer intercambio</h2>
-          <button className="trade-close" onClick={onClose} aria-label="Close">
+          <button type="button" className="trade-close" onClick={onClose} aria-label="Cerrar">
             ×
           </button>
         </div>
@@ -84,31 +84,38 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
 
           <form onSubmit={handleSubmit} className="trade-form">
             <div className="form-group">
-              <label>Tu carta ofrecida</label>
+              <label htmlFor="trade-offer">Tu carta ofrecida</label>
               <select
+                id="trade-offer"
                 value={selectedOfferId}
                 onChange={(e) => setSelectedOfferId(e.target.value)}
                 disabled={loading}
                 required
               >
                 <option value="">
-                  {loading ? 'Cargando tus cartas…' : 'Selecciona una de tus cartas'}
+                  {loading
+                    ? 'Cargando tus cartas…'
+                    : myCards.length
+                      ? 'Selecciona una de tus cartas'
+                      : 'No tienes cartas disponibles'}
                 </option>
                 {myCards.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.name} {c.is_available ? '' : '(no disponible)'}
+                    {c.name}
                   </option>
                 ))}
               </select>
             </div>
 
             <div className="form-group">
-              <label>Mensaje (opcional)</label>
+              <label htmlFor="trade-message">Mensaje (opcional)</label>
               <textarea
+                id="trade-message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Agrega detalles (estado, envío, etc.)"
                 rows={4}
+                maxLength={500}
               />
             </div>
 
@@ -116,7 +123,7 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
               <button type="button" onClick={onClose} className="secondary">
                 Cancelar
               </button>
-              <button type="submit" disabled={!canSubmit}>
+              <button type="submit" className="btn-primary" disabled={!canSubmit || myCards.length === 0}>
                 {submitting ? 'Enviando…' : 'Enviar oferta'}
               </button>
             </div>
@@ -128,4 +135,3 @@ function TradeModal({ isOpen, onClose, currentUser, requestedCard, onTradeCreate
 }
 
 export default TradeModal
-

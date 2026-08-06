@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { tradesService, tradeMessagesService } from '../lib/supabase'
 import './ProfilePage.css'
 
@@ -19,6 +20,7 @@ function ProfilePage() {
 
   const [editingUsername, setEditingUsername] = useState(profile?.username || '')
   const [savingProfile, setSavingProfile] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     setEditingUsername(profile?.username || '')
@@ -102,7 +104,7 @@ function ProfilePage() {
       setMessages(prev => (prev.some(m => m.id === inserted.id) ? prev : [...prev, inserted]))
       setMessageText('')
     } catch (e) {
-      alert('Error sending message: ' + e.message)
+      toast.error('Error al enviar: ' + e.message)
     } finally {
       setSending(false)
     }
@@ -111,13 +113,16 @@ function ProfilePage() {
   const handleSaveProfile = async () => {
     if (!user) return
     const username = editingUsername.trim()
-    if (!username) return
+    if (!username) {
+      toast.warn('El nombre de usuario no puede estar vacío')
+      return
+    }
     setSavingProfile(true)
     try {
       await updateProfile({ username })
-      alert('Profile updated')
+      toast.success('Perfil actualizado')
     } catch (e) {
-      alert('Error updating profile: ' + e.message)
+      toast.error('Error al actualizar: ' + e.message)
     } finally {
       setSavingProfile(false)
     }
@@ -127,7 +132,7 @@ function ProfilePage() {
     if (!user || !selectedTrade) return
     if (selectedTrade.status !== 'pending') return
     if (selectedTrade.receiver_id !== user.id) {
-      alert('Solo el dueño de la carta solicitada puede aceptar el intercambio.')
+      toast.warn('Solo el dueño de la carta solicitada puede aceptar.')
       return
     }
     if (!window.confirm('¿Aceptar el intercambio? Las dos cartas cambiarán de dueño.')) return
@@ -137,14 +142,9 @@ function ProfilePage() {
       await tradesService.acceptTrade(selectedTrade.id)
       await fetchTrades()
       await fetchMessages(selectedTrade.id)
-      alert('Intercambio aceptado.')
+      toast.success('Intercambio aceptado')
     } catch (e) {
-      const msg = e?.message || String(e)
-      alert(
-        'Error al aceptar: ' +
-          msg +
-          '\n\nSi no existe la función, crea en Supabase el RPC `accept_trade(trade_id uuid)` (security definer).'
-      )
+      toast.error(e?.message || String(e))
     } finally {
       setUpdatingTrade(false)
     }
@@ -154,7 +154,7 @@ function ProfilePage() {
     if (!user || !selectedTrade) return
     if (selectedTrade.status !== 'pending') return
     if (selectedTrade.receiver_id !== user.id) {
-      alert('Solo el receptor puede rechazar un intercambio.')
+      toast.warn('Solo el receptor puede rechazar.')
       return
     }
     if (!window.confirm('¿Rechazar este intercambio?')) return
@@ -163,9 +163,9 @@ function ProfilePage() {
     try {
       await tradesService.updateStatus(selectedTrade.id, 'rejected')
       await fetchTrades()
-      alert('Intercambio rechazado.')
+      toast.success('Intercambio rechazado')
     } catch (e) {
-      alert('Error al rechazar el intercambio: ' + e.message)
+      toast.error('Error al rechazar: ' + e.message)
     } finally {
       setUpdatingTrade(false)
     }
@@ -175,7 +175,7 @@ function ProfilePage() {
     if (!user || !selectedTrade) return
     if (selectedTrade.status !== 'pending') return
     if (selectedTrade.sender_id !== user.id) {
-      alert('Solo el remitente puede cancelar un intercambio.')
+      toast.warn('Solo el remitente puede cancelar.')
       return
     }
     if (!window.confirm('¿Cancelar este intercambio?')) return
@@ -184,9 +184,9 @@ function ProfilePage() {
     try {
       await tradesService.updateStatus(selectedTrade.id, 'cancelled')
       await fetchTrades()
-      alert('Intercambio cancelado.')
+      toast.success('Intercambio cancelado')
     } catch (e) {
-      alert('Error al cancelar el intercambio: ' + e.message)
+      toast.error('Error al cancelar: ' + e.message)
     } finally {
       setUpdatingTrade(false)
     }

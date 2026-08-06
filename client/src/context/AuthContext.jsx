@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext({})
@@ -18,34 +18,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setUser(session?.user ?? null)
-        if (session?.user) {
-          await fetchProfile(session.user.id)
-        } else {
-          setProfile(null)
-        }
-        setLoading(false)
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const fetchProfile = async (userId) => {
+  const fetchProfile = useCallback(async (userId) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -56,34 +29,93 @@ export function AuthProvider({ children }) {
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error)
       }
-      setProfile(data)
+      setProfile(data ?? null)
+      return data
     } catch (error) {
       console.error('Error fetching profile:', error)
+      setProfile(null)
+      return null
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+
+    const init = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!mounted) return
+        setUser(session?.user ?? null)
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        } else {
+          setLoading(false)
+        }
+      } catch {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    init()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        await fetchProfile(session.user.id)
+      } else {
+        setProfile(null)
+        setLoading(false)
+      }
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
+  }, [fetchProfile])
+
+  const ensureProfile = async (userId, username) => {
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (existing) return
+
+    const { error } = await supabase.from('profiles').upsert(
+      [{ id: userId, username: username || `trainer_${userId.slice(0, 6)}`, avatar_url: null }],
+      { onConflict: 'id' }
+    )
+    if (error) throw error
   }
 
   const signUp = async (email, password, username) => {
+    const trimmed = username.trim()
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { username: trimmed },
+      },
     })
 
     if (error) throw error
 
-    // Create profile after signup
-    if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{
-          id: data.user.id,
-          username: username,
-          avatar_url: null
-        }])
-
-      if (profileError) {
+    // Only insert profile when we have an active session (email confirm may be off)
+    if (data.user && data.session) {
+      try {
+        await ensureProfile(data.user.id, trimmed)
+        await fetchProfile(data.user.id)
+      } catch (profileError) {
         console.error('Error creating profile:', profileError)
+        throw new Error(
+          profileError.message ||
+            'Cuenta creada, pero no se pudo guardar el perfil. Intenta iniciar sesión.'
+        )
       }
     }
 
@@ -91,22 +123,32 @@ export function AuthProvider({ children }) {
   }
 
   const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+
+    if (data.user) {
+      const username = data.user.user_metadata?.username
+      try {
+        await ensureProfile(data.user.id, username)
+      } catch (e) {
+        console.error('Profile ensure failed:', e)
+      }
+    }
+
     return data
+  }
+
+  const resetPassword = async (email) => {
+    const redirectTo = `${window.location.origin}/`
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+    if (error) throw error
   }
 
   const signOut = async () => {
     try {
       const result = await withTimeout(supabase.auth.signOut(), 8000)
       if (result?.error) throw result.error
-    } catch (err) {
-      // If Supabase hangs/fails, still clear local state so UI doesn't get stuck.
-      // Best-effort sign out (fire-and-forget) to clean up server session.
+    } catch {
       try {
         supabase.auth.signOut()
       } catch {
@@ -115,6 +157,7 @@ export function AuthProvider({ children }) {
     } finally {
       setUser(null)
       setProfile(null)
+      setLoading(false)
     }
   }
 
@@ -140,16 +183,12 @@ export function AuthProvider({ children }) {
     signUp,
     signIn,
     signOut,
+    resetPassword,
     updateProfile,
-    fetchProfile
+    fetchProfile,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export default AuthContext
-

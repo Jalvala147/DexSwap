@@ -1,176 +1,146 @@
 import { createClient } from '@supabase/supabase-js'
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from './constants'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Debug: log Supabase config (remove in production)
-console.log('Supabase URL:', supabaseUrl)
-console.log('Supabase Key exists:', !!supabaseAnonKey)
-
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase credentials! Check your .env file.')
+  console.error('Missing Supabase credentials. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
 }
 
 export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '')
 
-// Cards service
+const OWNER_SELECT = 'id, username, avatar_url'
+const CARD_WITH_OWNER = `*, owner:profiles!owner_id(${OWNER_SELECT})`
+
+async function attachOwners(cards) {
+  if (!cards?.length) return cards || []
+
+  // Prefer embedded owner from join; fall back to batch lookup
+  if (cards.some((c) => c.owner !== undefined)) {
+    return cards.map((c) => ({ ...c, owner: c.owner || null }))
+  }
+
+  const ownerIds = [...new Set(cards.filter((c) => c.owner_id).map((c) => c.owner_id))]
+  if (!ownerIds.length) {
+    return cards.map((card) => ({ ...card, owner: null }))
+  }
+
+  const { data: profiles, error } = await supabase
+    .from('profiles')
+    .select(OWNER_SELECT)
+    .in('id', ownerIds)
+
+  if (error || !profiles) {
+    return cards.map((card) => ({ ...card, owner: null }))
+  }
+
+  const profileMap = Object.fromEntries(profiles.map((p) => [p.id, p]))
+  return cards.map((card) => ({
+    ...card,
+    owner: card.owner_id ? profileMap[card.owner_id] || null : null,
+  }))
+}
+
+async function fetchCards(queryBuilder) {
+  const { data, error } = await queryBuilder
+  if (error) {
+    // Fallback without embed if FK/relationship is missing
+    if (/relationship|foreign key|Could not find/i.test(error.message || '')) {
+      return null
+    }
+    throw error
+  }
+  return attachOwners(data || [])
+}
+
+async function fetchCardsSafe(buildWithOwner, buildPlain) {
+  const withOwner = await fetchCards(buildWithOwner())
+  if (withOwner) return withOwner
+  const { data, error } = await buildPlain()
+  if (error) throw error
+  return attachOwners(data || [])
+}
+
 export const cardsService = {
-  // Get all cards with owner info
   async getAll() {
-    // First get all cards
-    const { data: cards, error } = await supabase
-      .from('cards')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (error) {
-      console.error('Error fetching cards:', error)
-      throw error
-    }
-
-    // Get unique owner IDs
-    const ownerIds = [...new Set(cards.filter(c => c.owner_id).map(c => c.owner_id))]
-    
-    if (ownerIds.length > 0) {
-      // Fetch profiles for these owners
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', ownerIds)
-      
-      if (!profilesError && profiles) {
-        // Create a map for quick lookup
-        const profileMap = {}
-        profiles.forEach(p => { profileMap[p.id] = p })
-        
-        // Attach owner to each card
-        return cards.map(card => ({
-          ...card,
-          owner: card.owner_id ? profileMap[card.owner_id] || null : null
-        }))
-      }
-    }
-
-    return cards.map(card => ({ ...card, owner: null }))
+    return fetchCardsSafe(
+      () =>
+        supabase.from('cards').select(CARD_WITH_OWNER).order('created_at', { ascending: false }),
+      () => supabase.from('cards').select('*').order('created_at', { ascending: false })
+    )
   },
 
-  // Get a single card by ID
   async getById(id) {
-    const { data: card, error } = await supabase
+    let { data: card, error } = await supabase
       .from('cards')
-      .select('*')
+      .select(CARD_WITH_OWNER)
       .eq('id', id)
       .single()
-    
-    if (error) throw error
 
-    // Fetch owner profile if exists
-    if (card.owner_id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .eq('id', card.owner_id)
-        .single()
-      
-      card.owner = profile || null
-    } else {
-      card.owner = null
+    if (error && /relationship|foreign key|Could not find/i.test(error.message || '')) {
+      const fallback = await supabase.from('cards').select('*').eq('id', id).single()
+      if (fallback.error) throw fallback.error
+      card = fallback.data
+      error = null
     }
 
-    return card
+    if (error) throw error
+    const [withOwner] = await attachOwners([card])
+    return withOwner
   },
 
-  // Get cards by owner
   async getByOwner(ownerId) {
-    const { data: cards, error } = await supabase
-      .from('cards')
-      .select('*')
-      .eq('owner_id', ownerId)
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-
-    // Fetch owner profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, username, avatar_url')
-      .eq('id', ownerId)
-      .single()
-
-    return cards.map(card => ({ ...card, owner: profile || null }))
+    return fetchCardsSafe(
+      () =>
+        supabase
+          .from('cards')
+          .select(CARD_WITH_OWNER)
+          .eq('owner_id', ownerId)
+          .order('created_at', { ascending: false }),
+      () =>
+        supabase
+          .from('cards')
+          .select('*')
+          .eq('owner_id', ownerId)
+          .order('created_at', { ascending: false })
+    )
   },
 
-  // Get available cards
   async getAvailable() {
-    const { data: cards, error } = await supabase
-      .from('cards')
-      .select('*')
-      .eq('is_available', true)
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-
-    // Get unique owner IDs
-    const ownerIds = [...new Set(cards.filter(c => c.owner_id).map(c => c.owner_id))]
-    
-    if (ownerIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .in('id', ownerIds)
-      
-      if (profiles) {
-        const profileMap = {}
-        profiles.forEach(p => { profileMap[p.id] = p })
-        
-        return cards.map(card => ({
-          ...card,
-          owner: card.owner_id ? profileMap[card.owner_id] || null : null
-        }))
-      }
-    }
-
-    return cards.map(card => ({ ...card, owner: null }))
+    return fetchCardsSafe(
+      () =>
+        supabase
+          .from('cards')
+          .select(CARD_WITH_OWNER)
+          .eq('is_available', true)
+          .order('created_at', { ascending: false }),
+      () =>
+        supabase
+          .from('cards')
+          .select('*')
+          .eq('is_available', true)
+          .order('created_at', { ascending: false })
+    )
   },
 
-  // Create a new card
   async create(cardData) {
-    // Clean the data - remove undefined/null owner_id
     const cleanData = { ...cardData }
     if (cleanData.owner_id === null || cleanData.owner_id === undefined) {
       delete cleanData.owner_id
     }
-    
-    console.log('Creating card with data:', cleanData)
-    
+
     const { data: card, error } = await supabase
       .from('cards')
       .insert([cleanData])
       .select('*')
       .single()
-    
-    if (error) {
-      console.error('Error creating card:', error)
-      throw error
-    }
 
-    // Fetch owner profile if owner_id exists
-    if (card.owner_id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, username, avatar_url')
-        .eq('id', card.owner_id)
-        .single()
-      
-      card.owner = profile || null
-    } else {
-      card.owner = null
-    }
-
-    return card
+    if (error) throw error
+    const [withOwner] = await attachOwners([card])
+    return withOwner
   },
 
-  // Update a card
   async update(id, updates) {
     const { data, error } = await supabase
       .from('cards')
@@ -178,55 +148,51 @@ export const cardsService = {
       .eq('id', id)
       .select('*')
       .single()
-    
+
     if (error) throw error
-    return data
+    const [withOwner] = await attachOwners([data])
+    return withOwner
   },
 
-  // Delete a card
   async delete(id) {
-    const { error } = await supabase
-      .from('cards')
-      .delete()
-      .eq('id', id)
-    
+    const { error } = await supabase.from('cards').delete().eq('id', id)
     if (error) throw error
     return true
   },
 
-  // Upload card image to Supabase Storage
+  validateImageFile(file) {
+    if (!file) return { ok: false, error: 'No se seleccionó imagen' }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return { ok: false, error: 'Formato no válido. Usa JPG, PNG, WebP o GIF.' }
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      return { ok: false, error: 'La imagen supera 5 MB. Comprimela e inténtalo de nuevo.' }
+    }
+    return { ok: true }
+  },
+
   async uploadImage(file) {
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-    const filePath = `${fileName}` // Store directly in bucket root
+    const check = this.validateImageFile(file)
+    if (!check.ok) throw new Error(check.error)
 
-    console.log('Uploading image:', fileName, 'Size:', file.size)
+    const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '')
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}.${fileExt}`
 
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('cards')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      })
+    const { error: uploadError } = await supabase.storage.from('cards').upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type,
+    })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
-      throw new Error(`Image upload failed: ${uploadError.message}`)
+      throw new Error(`Error al subir imagen: ${uploadError.message}`)
     }
 
-    console.log('Upload successful:', uploadData)
-
-    const { data } = supabase.storage
-      .from('cards')
-      .getPublicUrl(filePath)
-
-    console.log('Public URL:', data.publicUrl)
-
+    const { data } = supabase.storage.from('cards').getPublicUrl(fileName)
     return data.publicUrl
-  }
+  },
 }
 
-// Purchases service (simulated checkout)
 export const purchasesService = {
   async getByUser(userId) {
     const { data, error } = await supabase
@@ -237,48 +203,36 @@ export const purchasesService = {
 
     if (error) throw error
     return data
-  }
+  },
 }
 
-// Profiles service
 export const profilesService = {
-  // Get profile by ID
   async getById(id) {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', id)
-      .single()
-    
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single()
     if (error) throw error
     return data
   },
 
-  // Get profile by username
   async getByUsername(username) {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('username', username)
       .single()
-    
     if (error) throw error
     return data
   },
 
-  // Create or update profile
   async upsert(profileData) {
     const { data, error } = await supabase
       .from('profiles')
       .upsert([profileData])
       .select()
       .single()
-    
     if (error) throw error
     return data
   },
 
-  // Update profile
   async update(id, updates) {
     const { data, error } = await supabase
       .from('profiles')
@@ -286,141 +240,79 @@ export const profilesService = {
       .eq('id', id)
       .select()
       .single()
-    
     if (error) throw error
     return data
-  }
+  },
 }
 
-// Trades service
+const TRADE_SELECT = `
+  *,
+  sender:profiles!sender_id(id, username, avatar_url),
+  receiver:profiles!receiver_id(id, username, avatar_url),
+  card_offered:cards!card_offered_id(*),
+  card_requested:cards!card_requested_id(*)
+`
+
 export const tradesService = {
-  // Get all trades
   async getAll() {
     const { data, error } = await supabase
       .from('trades')
-      .select(`
-        *,
-        sender:profiles!sender_id(id, username, avatar_url),
-        receiver:profiles!receiver_id(id, username, avatar_url),
-        card_offered:cards!card_offered_id(*),
-        card_requested:cards!card_requested_id(*)
-      `)
+      .select(TRADE_SELECT)
       .order('created_at', { ascending: false })
-    
     if (error) throw error
     return data
   },
 
-  // Get trades for a user (sent or received)
   async getByUser(userId) {
     const { data, error } = await supabase
       .from('trades')
-      .select(`
-        *,
-        sender:profiles!sender_id(id, username, avatar_url),
-        receiver:profiles!receiver_id(id, username, avatar_url),
-        card_offered:cards!card_offered_id(*),
-        card_requested:cards!card_requested_id(*)
-      `)
+      .select(TRADE_SELECT)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order('created_at', { ascending: false })
-    
     if (error) throw error
     return data
   },
 
-  // Create a trade offer
   async create(tradeData) {
     const { data, error } = await supabase
       .from('trades')
-      .insert([{
-        ...tradeData,
-        status: 'pending'
-      }])
-      .select(`
-        *,
-        sender:profiles!sender_id(id, username, avatar_url),
-        receiver:profiles!receiver_id(id, username, avatar_url),
-        card_offered:cards!card_offered_id(*),
-        card_requested:cards!card_requested_id(*)
-      `)
+      .insert([{ ...tradeData, status: 'pending' }])
+      .select(TRADE_SELECT)
       .single()
-    
     if (error) throw error
     return data
   },
 
-  // Update trade status (accept, reject, cancel)
   async updateStatus(id, status) {
     const { data, error } = await supabase
       .from('trades')
       .update({ status })
       .eq('id', id)
-      .select(`
-        *,
-        sender:profiles!sender_id(id, username, avatar_url),
-        receiver:profiles!receiver_id(id, username, avatar_url),
-        card_offered:cards!card_offered_id(*),
-        card_requested:cards!card_requested_id(*)
-      `)
+      .select(TRADE_SELECT)
       .single()
-    
     if (error) throw error
     return data
   },
 
-  // Accept a trade (updates both cards' owners)
+  /**
+   * Accept must go through RPC so ownership swap is atomic under RLS.
+   * Non-atomic client-side swaps are intentionally not used.
+   */
   async acceptTrade(tradeId) {
-    // Con RLS en `cards`, el intercambio debe hacerse con RPC `security definer`.
-    const { data: rpcData, error: rpcError } = await supabase.rpc('accept_trade', {
-      trade_id: tradeId
-    })
-    if (!rpcError) return rpcData ?? true
-
-    const rpcMsg = rpcError.message || String(rpcError)
-    const rpcMissing =
-      /function .* does not exist|Could not find the function/i.test(rpcMsg) ||
-      rpcError.code === 'PGRST202'
-
-    // Solo fallback si no hay RPC (dev sin RLS). Si el RPC existe pero falla, no seguir.
-    if (!rpcMissing) {
-      throw new Error(rpcMsg)
+    const { data, error } = await supabase.rpc('accept_trade', { trade_id: tradeId })
+    if (error) {
+      const msg = error.message || String(error)
+      if (/function .* does not exist|Could not find the function/i.test(msg) || error.code === 'PGRST202') {
+        throw new Error(
+          'Falta el RPC accept_trade en Supabase. Créalo como security definer para intercambiar dueños de forma atómica.'
+        )
+      }
+      throw new Error(msg)
     }
-
-    const { data: trade, error: fetchError } = await supabase
-      .from('trades')
-      .select('*')
-      .eq('id', tradeId)
-      .single()
-
-    if (fetchError) throw fetchError
-
-    const { error: updateError } = await supabase
-      .from('trades')
-      .update({ status: 'accepted' })
-      .eq('id', tradeId)
-
-    if (updateError) throw updateError
-
-    const { error: swap1Error } = await supabase
-      .from('cards')
-      .update({ owner_id: trade.receiver_id })
-      .eq('id', trade.card_offered_id)
-
-    if (swap1Error) throw swap1Error
-
-    const { error: swap2Error } = await supabase
-      .from('cards')
-      .update({ owner_id: trade.sender_id })
-      .eq('id', trade.card_requested_id)
-
-    if (swap2Error) throw swap2Error
-
-    return true
-  }
+    return data ?? true
+  },
 }
 
-// Trade messages service (chat per trade)
 export const tradeMessagesService = {
   async getByTrade(tradeId) {
     const { data, error } = await supabase
@@ -428,7 +320,6 @@ export const tradeMessagesService = {
       .select('*')
       .eq('trade_id', tradeId)
       .order('created_at', { ascending: true })
-
     if (error) throw error
     return data
   },
@@ -439,7 +330,6 @@ export const tradeMessagesService = {
       .insert([{ trade_id, sender_id, content }])
       .select('*')
       .single()
-
     if (error) throw error
     return data
   },
@@ -449,66 +339,24 @@ export const tradeMessagesService = {
       .channel(`trade-messages-${tradeId}`)
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'trade_messages', filter: `trade_id=eq.${tradeId}` },
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'trade_messages',
+          filter: `trade_id=eq.${tradeId}`,
+        },
         onChange
       )
       .subscribe()
-  }
+  },
 }
 
-// Marketplace RPCs (needed when cards are protected by RLS)
 export const marketplaceService = {
   async purchaseCard({ card_id }) {
     const { data, error } = await supabase.rpc('purchase_card', { card_id })
     if (error) throw error
     return data
-  }
-}
-
-// Auth helpers
-export const authService = {
-  // Get current user
-  async getCurrentUser() {
-    const { data: { user } } = await supabase.auth.getUser()
-    return user
   },
-
-  // Sign up with email
-  async signUp(email, password, username) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { username }
-      }
-    })
-    
-    if (error) throw error
-    return data
-  },
-
-  // Sign in with email
-  async signIn(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    })
-    
-    if (error) throw error
-    return data
-  },
-
-  // Sign out
-  async signOut() {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
-  },
-
-  // Listen to auth changes
-  onAuthStateChange(callback) {
-    return supabase.auth.onAuthStateChange(callback)
-  }
 }
 
 export default supabase
-

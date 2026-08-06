@@ -1,15 +1,22 @@
 import { useEffect, useState } from 'react'
 import { PayPalButtons, PayPalScriptProvider } from '@paypal/react-paypal-js'
-import { marketplaceService } from '../lib/supabase'
+import { cardsService, marketplaceService } from '../lib/supabase'
+import { useToast } from '../context/ToastContext'
 import './PurchaseModal.css'
+
+const isDev = import.meta.env.DEV
 
 function PurchaseModal({ card, onClose, onPurchaseComplete }) {
   const [paypalStatus, setPaypalStatus] = useState({ loading: true, enabled: false, clientId: null })
+  const [busy, setBusy] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
+    let cancelled = false
     fetch('/api/paypal/client-id')
       .then((r) => r.json())
       .then((data) => {
+        if (cancelled) return
         setPaypalStatus({
           loading: false,
           enabled: Boolean(data.enabled && data.clientId),
@@ -17,21 +24,54 @@ function PurchaseModal({ card, onClose, onPurchaseComplete }) {
         })
       })
       .catch(() => {
+        if (cancelled) return
         setPaypalStatus({ loading: false, enabled: false, clientId: null })
       })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  const handleSimulatedPurchase = async () => {
-    if (!window.confirm(`Simular compra en Supabase de "${card.name}" por $${card.price}? (sin PayPal)`)) {
-      return
+  const assertStillAvailable = async () => {
+    const fresh = await cardsService.getById(card.id)
+    if (!fresh?.is_available) {
+      throw new Error('Esta carta ya no está disponible')
     }
+    if (Number(fresh.price) !== Number(card.price)) {
+      throw new Error(`El precio cambió a $${fresh.price}. Cierra y vuelve a intentar.`)
+    }
+    return fresh
+  }
+
+  const completeOwnership = async (orderID) => {
     try {
       await marketplaceService.purchaseCard({ card_id: card.id })
-      alert('Compra simulada OK (RPC purchase_card).')
+    } catch (dbErr) {
+      const msg = dbErr?.message || String(dbErr)
+      throw new Error(
+        orderID
+          ? `Pago OK (orden ${orderID}), pero falló transferir la carta: ${msg}`
+          : msg
+      )
+    }
+  }
+
+  const handleSimulatedPurchase = async () => {
+    if (!isDev) return
+    if (!window.confirm(`Simular compra de "${card.name}" por $${card.price}? (solo desarrollo)`)) {
+      return
+    }
+    setBusy(true)
+    try {
+      await assertStillAvailable()
+      await completeOwnership()
+      toast.success('Compra simulada completada')
       onPurchaseComplete()
       onClose()
     } catch (e) {
-      alert(e?.message || String(e))
+      toast.error(e?.message || String(e))
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -60,15 +100,17 @@ function PurchaseModal({ card, onClose, onPurchaseComplete }) {
             }}
           >
             <div className="paypal-zone">
-              <p className="purchase-muted">Sandbox: inicia sesión con una cuenta compradora de prueba.</p>
+              <p className="purchase-muted">Paga de forma segura con PayPal.</p>
               <PayPalButtons
+                disabled={busy}
                 style={{ layout: 'vertical', label: 'paypal' }}
                 createOrder={async () => {
+                  await assertStillAvailable()
                   const res = await fetch('/api/paypal/create-order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      amount: card.price,
+                      amount: Number(card.price),
                       currency: 'USD',
                       cardId: card.id,
                     }),
@@ -78,6 +120,7 @@ function PurchaseModal({ card, onClose, onPurchaseComplete }) {
                   return data.id
                 }}
                 onApprove={async (data) => {
+                  setBusy(true)
                   try {
                     const res = await fetch('/api/paypal/capture-order', {
                       method: 'POST',
@@ -86,39 +129,43 @@ function PurchaseModal({ card, onClose, onPurchaseComplete }) {
                     })
                     const json = await res.json()
                     if (!res.ok) throw new Error(json.error || 'No se pudo capturar el pago')
-                    try {
-                      await marketplaceService.purchaseCard({ card_id: card.id })
-                    } catch (dbErr) {
-                      alert(
-                        `PayPal OK (orden ${data.orderID}), pero falló actualizar Supabase: ${dbErr?.message || dbErr}. Revisa el RPC purchase_card.`
-                      )
-                      return
-                    }
-                    alert(`Pago PayPal capturado (sandbox). ID orden: ${data.orderID}`)
+                    await completeOwnership(data.orderID)
+                    toast.success('Pago capturado. ¡La carta es tuya!')
                     onPurchaseComplete()
                     onClose()
                   } catch (e) {
-                    alert(e?.message || String(e))
+                    toast.error(e?.message || String(e))
+                  } finally {
+                    setBusy(false)
                   }
                 }}
                 onError={(err) => {
                   console.error(err)
-                  alert('Error en PayPal: revisa la consola.')
+                  toast.error('Error en PayPal. Inténtalo de nuevo.')
                 }}
               />
             </div>
           </PayPalScriptProvider>
         ) : (
           <p className="purchase-muted">
-            PayPal no está activo en el servidor. Arranca el backend (puerto 3001) y configura{' '}
-            <code>PAYPAL_CLIENT_ID</code> y <code>PAYPAL_CLIENT_SECRET</code> en <code>server/.env</code>.
+            PayPal no está activo. Configura <code>PAYPAL_CLIENT_ID</code> y{' '}
+            <code>PAYPAL_CLIENT_SECRET</code> en el servidor.
           </p>
         )}
 
-        <div className="purchase-divider">o</div>
-        <button type="button" className="purchase-sim-btn" onClick={handleSimulatedPurchase}>
-          Compra simulada (solo Supabase)
-        </button>
+        {isDev && (
+          <>
+            <div className="purchase-divider">o (dev)</div>
+            <button
+              type="button"
+              className="purchase-sim-btn"
+              onClick={handleSimulatedPurchase}
+              disabled={busy}
+            >
+              Compra simulada (solo Supabase)
+            </button>
+          </>
+        )}
       </div>
     </div>
   )

@@ -64,10 +64,28 @@
 }
 
 .brand-text {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-primary) !important;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--gold) !important;
+  letter-spacing: -0.03em;
+}
+
+button.navbar-brand {
+  border: none;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+button.navbar-brand::before {
+  display: none;
+}
+
+button.navbar-brand:hover {
+  transform: scale(1.02);
+  box-shadow: none;
+  border: none;
 }
 
 /* Search Bar */
